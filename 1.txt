@@ -1,0 +1,4 @@
+git status
+git add .  
+git commit -m "Conteudo do commit"
+git push origin main

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoaParte - Registro</title>
+    <link rel="icon" type="image/png" href="images/image.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2E7D32;
+            --primary-hover: #1B5E20;
+            --primary-light: rgba(46, 125, 50, 0.1);
+            --text-light: #ffffff;
+            --text-dark: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        body::before {
+            width: 600px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            top: -300px;
+            left: -300px;
+        }
+
+        body::after {
+            width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            bottom: -250px;
+            right: -250px;
+        }
+
+        .register-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .register-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary-color);
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-color);
+            color: var(--text-light);
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .login-link {
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .login-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 5px;
+            color: white;
+            font-weight: 500;
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        .notification.success {
+            background: var(--primary-color);
+        }
+
+        .notification.error {
+            background: #f44336;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .register-container {
+                padding: 15px;
+            }
+
+            .register-box {
+                padding: 30px 20px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-box">
+            <img src="images/image2.png" alt="Logo" class="logo">
+            <h2>Criar Nova Conta</h2>
+            <form id="register-form" onsubmit="event.preventDefault(); register();">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Nome de usuário" required minlength="3">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Senha" required minlength="6">
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-key"></i>
+                    <input type="text" id="registration-code" placeholder="Código de registro" required>
+                </div>
+                <button type="submit" class="btn">Criar Conta</button>
+            </form>
+            <p class="login-link">Já tem uma conta? <a href="index.html">Fazer login</a></p>
+        </div>
+    </div>
+
+    <!-- Notification Component -->
+    <div id="notification" class="notification">
+        <span id="notification-message"></span>
+    </div>
+
+    <script>
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const registrationCode = document.getElementById('registration-code').value;
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password, registrationCode })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro ao registrar');
+                }
+
+                showNotification('Conta criada com sucesso! Redirecionando...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            const messageElement = document.getElementById('notification-message');
+            
+            notification.className = `notification ${type}`;
+            messageElement.textContent = message;
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

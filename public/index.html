@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoaParte - Login</title>
+    <link rel="icon" type="image/png" href="images/image.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #4CAF50;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        body::before {
+            width: 600px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.1);
+            top: -300px;
+            left: -300px;
+        }
+
+        body::after {
+            width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            bottom: -250px;
+            right: -250px;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .logo {
+            width: 120px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4CAF50;
+            font-size: 1.2rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #388E3C;
+            transform: translateY(-2px);
+        }
+
+        .register-link {
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .register-link a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 15px;
+            }
+
+            .login-box {
+                padding: 30px 20px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <img src="images/image2.png" alt="Logo" class="logo">
+            <h2>Bem-vindo ao BoaParte</h2>
+            <form id="login-form" onsubmit="event.preventDefault(); login();">
+                <div class="input-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" id="username" placeholder="Nome de usuário" required>
+                </div>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" placeholder="Senha" required>
+                    <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
+                </div>
+                <button type="submit" class="btn">Entrar</button>
+            </form>
+            <p class="register-link">Não tem uma conta? <a href="#" id="register-link">Registre-se</a></p>
+        </div>
+    </div>
+
+    <!-- Register Form -->
+    <div class="register-container" style="display: none;">
+        <h2>Registro</h2>
+        <form id="register-form">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="registerUser" placeholder="Nome de usuário" required minlength="3">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="registerPass" placeholder="Senha" required minlength="6">
+                <i class="fas fa-eye-slash toggle-password"></i>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-key"></i>
+                <input type="text" id="registrationCode" placeholder="Código de registro" required>
+            </div>
+            <button type="submit">Criar Conta</button>
+        </form>
+        <p>Já tem uma conta? <a href="#" id="login-link">Faça login</a></p>
+    </div>
+
+    <!-- Notification Component -->
+    <div id="notification" class="notification" style="display: none;">
+        <i class="fas fa-info-circle notification-icon"></i>
+        <span id="notificationMessage"></span>
+        <button id="close-notification">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

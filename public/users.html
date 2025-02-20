@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BoaParte - Usuários</title>
+    <link rel="icon" type="image/png" href="images/image.png">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #4CAF50;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            flex: 1;
+        }
+
+        .users-panel {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+        }
+
+        .panel-header {
+            background: #388E3C;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .panel-header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .panel-header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+        }
+
+        .users-list {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .user-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            background: #e8f5e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: #4CAF50;
+            font-size: 20px;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .user-details {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0 0;
+        }
+
+        .user-role {
+            background: #e8f5e9;
+            color: #4CAF50;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .panel-footer {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Estilização da barra de rolagem */
+        .users-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .users-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .users-list::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 4px;
+        }
+
+        .users-list::-webkit-scrollbar-thumb:hover {
+            background: #388E3C;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+                margin: 10px;
+            }
+
+            .users-panel {
+                height: calc(100vh - 20px);
+            }
+
+            .user-card {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .user-avatar {
+                margin: 0 0 10px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="users-panel">
+            <div class="panel-header">
+                <h1>Gerenciamento de Usuários</h1>
+                <p>Visualize e gerencie todos os usuários do sistema</p>
+            </div>
+
+            <div class="users-list" id="users-list">
+                <!-- Os usuários serão inseridos aqui dinamicamente -->
+            </div>
+
+            <div class="panel-footer">
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">
+                        <i class="fas fa-arrow-left"></i>
+                        Voltar ao Dashboard
+                    </button>
+                    <button class="btn btn-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Sair
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar se é administrador
+        function isAdmin() {
+            const username = localStorage.getItem('username');
+            return username === 'Anderson';
+        }
+
+        // Verificar autenticação e permissão
+        function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token || !isAdmin()) {
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Carregar usuários
+        async function loadUsers() {
+            if (!checkAuth()) return;
+
+            try {
+                const response = await fetch('/api/users', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar usuários');
+                }
+
+                const users = await response.json();
+                const usersList = document.getElementById('users-list');
+                usersList.innerHTML = '';
+
+                users.forEach(user => {
+                    const role = user.username === 'Anderson' ? 'Administrador' : 'Usuário';
+                    
+                    const userCard = document.createElement('div');
+                    userCard.className = 'user-card';
+                    userCard.innerHTML = `
+                        <div class="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-info">
+                            <h3 class="user-name">${user.username}</h3>
+                            <p class="user-details">
+                                Criado em: ${new Date(user.createdAt).toLocaleDateString()}
+                                <span class="user-role">${role}</span>
+                            </p>
+                        </div>
+                    `;
+                    usersList.appendChild(userCard);
+                });
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao carregar usuários');
+            }
+        }
+
+        // Função de logout
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = 'index.html';
+        }
+
+        // Verificar autenticação e carregar usuários quando a página carregar
+        window.addEventListener('DOMContentLoaded', () => {
+            if (checkAuth()) {
+                loadUsers();
+            }
+        });
+    </script>
+</body>
+</html>
