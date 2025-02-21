@@ -24,6 +24,9 @@
             margin-bottom: 2rem;
             color: #1b5e20;
             flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .users-button {
             background: #388E3C;
@@ -34,10 +37,11 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: none; 
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            margin-bottom: 1rem;
+            margin: 1rem auto;
+            max-width: 200px;
         }
         .users-button:hover {
             background: #2E7D32;
@@ -45,6 +49,166 @@
         }
         .users-button i {
             font-size: 1.2rem;
+        }
+        .filter-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: #388E3C;
+            transform: translateY(-2px);
+        }
+
+        .filter-btn i {
+            font-size: 0.9rem;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            display: none;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 1rem 0;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            color: #4CAF50;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            color: #666;
+            margin: 0.5rem 0;
+        }
+
+        .empty-state-tip {
+            margin-top: 1rem;
+            font-style: italic;
+            color: #888;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            position: relative;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        .users-list {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 1rem;
+        }
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .user-item:last-child {
+            border-bottom: none;
+        }
+        .contact-info p {
+            margin: 5px 0;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .contact-info p i {
+            color: #4CAF50;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .contact-info h3 {
+            margin: 0 0 10px;
+            color: #333;
+        }
+
+        /* Estilização da barra de rolagem */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #e8f5e9;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #388E3C;
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            color: #666;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f5f5f5;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            background: #e0e0e0;
+            color: #333;
         }
     </style>
 </head>
@@ -97,8 +261,8 @@
                             <input type="tel" id="phone" name="phone" required>
                         </div>
                         <div class="form-group">
-                            <label for="birthday">Data de Aniversário:</label>
-                            <input type="date" id="birthday" name="birthday" required>
+                            <label for="birthday">Data de Aniversário: (opcional)</label>
+                            <input type="date" id="birthday" name="birthday">
                         </div>
                         <button type="submit" class="submit-btn">Salvar</button>
                     </form>
@@ -107,9 +271,8 @@
 
             <!-- Área de Filtros e Busca -->
             <div class="filters-section">
-                <!-- Filtro por Mês -->
                 <div class="filter-group">
-                    <select id="month-filter" onchange="filterContacts()">
+                    <select id="month-filter">
                         <option value="all">Todos os Meses</option>
                         <option value="1">Janeiro</option>
                         <option value="2">Fevereiro</option>
@@ -124,13 +287,8 @@
                         <option value="11">Novembro</option>
                         <option value="12">Dezembro</option>
                     </select>
-                </div>
-
-                <!-- Busca de Contatos -->
-                <div class="search-group">
-                    <input type="text" id="search-input" placeholder="Buscar contatos...">
-                    <button onclick="searchContacts()" class="search-btn">
-                        <i class="fas fa-search"></i>
+                    <button onclick="filterContacts()" class="filter-btn">
+                        <i class="fas fa-check"></i> OK
                     </button>
                 </div>
             </div>
@@ -143,22 +301,19 @@
             <!-- Lista de Contatos -->
             <div id="contacts-list" class="contacts-list">
                 <!-- Estado vazio -->
-                <div id="empty-state" class="empty-state" style="display: none;">
-                    <i class="fas fa-address-book"></i>
+                <div id="empty-state" class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
                     <h3>Nenhum contato encontrado</h3>
-                    <p>Não há registros de contatos adicionados em <span id="empty-month">este mês</span>.</p>
+                    <p>Não há contatos com aniversário em <span id="empty-month">este mês</span>.</p>
+                    <p class="empty-state-tip">Adicione novos contatos usando o botão "Adicionar Contato" acima.</p>
                 </div>
                 <!-- Os contatos serão inseridos aqui dinamicamente -->
             </div>
         </div>
     </div>
 
-    <div id="notification" class="notification">
-        <i class="fas fa-info-circle"></i>
+    <div id="notification" class="notification" style="display: none;">
         <span id="notification-message"></span>
-        <button onclick="this.parentElement.style.display='none'">
-            <i class="fas fa-times"></i>
-        </button>
     </div>
 
     <div id="edit-modal" class="modal">
@@ -216,15 +371,22 @@
 
         // Função para mostrar notificações
         function showNotification(message, isError = false) {
-            const notification = document.getElementById('notification');
-            const notificationMessage = document.getElementById('notification-message');
-            
+            const notification = document.createElement('div');
             notification.className = `notification ${isError ? 'error' : 'success'}`;
-            notificationMessage.textContent = message;
-            notification.style.display = 'flex';
-            
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.padding = '15px 25px';
+            notification.style.borderRadius = '5px';
+            notification.style.backgroundColor = isError ? '#ff5252' : '#4CAF50';
+            notification.style.color = 'white';
+            notification.style.zIndex = '1000';
+            notification.textContent = message;
+
+            document.body.appendChild(notification);
+
             setTimeout(() => {
-                notification.style.display = 'none';
+                notification.remove();
             }, 5000);
         }
 
@@ -232,68 +394,109 @@
         async function addContact(event) {
             event.preventDefault();
             
-            const name = document.getElementById('name').value.trim();
-            const phone = document.getElementById('phone').value.trim();
-            const birthday = document.getElementById('birthday').value.trim();
-            
             try {
-                const response = await fetch('/contacts', {
+                const name = document.getElementById('name').value.trim();
+                const phone = document.getElementById('phone').value.trim();
+                const birthday = document.getElementById('birthday').value.trim();
+
+                if (!name || !phone) {
+                    throw new Error('Nome e telefone são obrigatórios');
+                }
+
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const response = await fetch('/api/contacts', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ name, phone, birthday })
+                    body: JSON.stringify({ 
+                        name, 
+                        phone, 
+                        birthday: birthday || null 
+                    })
                 });
 
-                const data = await response.json();
-
                 if (!response.ok) {
+                    throw new Error('Erro ao criar contato');
+                }
+
+                const data = await response.json();
+                if (!data.success) {
                     throw new Error(data.message || 'Erro ao criar contato');
                 }
 
                 showNotification('Contato criado com sucesso!');
-                document.getElementById('contact-form').reset();
-                await loadContacts();
                 
+                const form = document.getElementById('contact-form');
+                if (form) {
+                    form.reset();
+                }
+
+                const modal = document.getElementById('add-contact-modal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+
+                const monthFilter = document.getElementById('month-filter').value;
+                if (monthFilter === 'all') {
+                    await loadContacts();
+                } else {
+                    await loadMonthContacts(monthFilter);
+                }
             } catch (error) {
-                console.error('Erro ao criar contato:', error);
+                console.error('Erro:', error);
                 showNotification(error.message || 'Erro ao criar contato', true);
             }
             
             return false;
         }
 
+        // Função para verificar se o token é válido
+        function checkTokenAndRedirect(response) {
+            if (response.status === 401 || response.status === 403) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
         // Função para editar contato
         async function editContact(id) {
             try {
-                const response = await fetch(`/contacts/${id}`, {
+                const response = await fetch(`/api/contacts/${id}`, {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
                     }
                 });
 
+                if (!checkTokenAndRedirect(response)) return;
+
                 if (!response.ok) {
-                    throw new Error('Erro ao carregar dados do contato');
+                    throw new Error('Erro ao carregar contato');
                 }
 
-                const data = await response.json();
+                const contact = await response.json();
                 
-                // Preencher o formulário
-                document.getElementById('edit-id').value = id;
-                document.getElementById('edit-name').value = data.contact.name;
-                document.getElementById('edit-phone').value = data.contact.phone;
-                
-                // Formatar a data para o formato YYYY-MM-DD
-                const birthday = new Date(data.contact.birthday);
-                const formattedDate = birthday.toISOString().split('T')[0];
-                document.getElementById('edit-birthday').value = formattedDate;
+                // Preenche o formulário de edição
+                document.getElementById('edit-id').value = contact._id;
+                document.getElementById('edit-name').value = contact.name;
+                document.getElementById('edit-phone').value = contact.phone;
+                document.getElementById('edit-birthday').value = new Date(contact.birthday).toISOString().split('T')[0];
 
-                // Mostrar o modal
+                // Mostra o modal
                 document.getElementById('edit-modal').style.display = 'block';
+
             } catch (error) {
                 console.error('Erro:', error);
-                showNotification(error.message, 'error');
+                showNotification('Erro ao carregar dados do contato', true);
             }
         }
 
@@ -307,7 +510,7 @@
             const birthday = document.getElementById('edit-birthday').value;
 
             try {
-                const response = await fetch(`/contacts/${id}`, {
+                const response = await fetch(`/api/contacts/${id}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -316,21 +519,20 @@
                     body: JSON.stringify({ name, phone, birthday })
                 });
 
-                const data = await response.json();
+                if (!checkTokenAndRedirect(response)) return;
 
                 if (!response.ok) {
-                    throw new Error(data.message || 'Erro ao atualizar contato');
+                    throw new Error('Erro ao atualizar contato');
                 }
 
-                showNotification('Contato atualizado com sucesso!', 'success');
+                showNotification('Contato atualizado com sucesso!');
                 closeEditModal();
-                await loadContacts();
+                await loadContacts(); // Recarrega a lista de contatos
+
             } catch (error) {
                 console.error('Erro:', error);
-                showNotification(error.message, 'error');
+                showNotification('Erro ao atualizar contato', true);
             }
-
-            return false;
         }
 
         // Função para fechar modal de edição
@@ -340,275 +542,189 @@
 
         // Deletar contato
         async function deleteContact(id) {
-            if (!confirm('Tem certeza que deseja excluir este contato?')) {
-                return;
-            }
-            
             try {
-                const response = await fetch(`/contacts/${id}`, {
+                if (!confirm('Tem certeza que deseja excluir este contato?')) {
+                    return;
+                }
+
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const response = await fetch(`/api/contacts/${id}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
-                const data = await response.json();
-
                 if (!response.ok) {
+                    throw new Error('Erro ao deletar contato');
+                }
+
+                const data = await response.json();
+                if (!data.success) {
                     throw new Error(data.message || 'Erro ao deletar contato');
                 }
 
                 showNotification('Contato deletado com sucesso!');
-                await loadContacts();
                 
+                // Recarrega a lista de contatos
+                const monthFilter = document.getElementById('month-filter').value;
+                if (monthFilter === 'all') {
+                    loadContacts();
+                } else {
+                    loadMonthContacts(monthFilter);
+                }
             } catch (error) {
-                console.error('Erro ao deletar contato:', error);
+                console.error('Erro:', error);
                 showNotification(error.message || 'Erro ao deletar contato', true);
             }
         }
 
-        // Carregar contatos
+        // Função para carregar todos os contatos
         async function loadContacts() {
             try {
-                const response = await fetch("/api/contacts", {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const response = await fetch('/api/contacts', {
                     headers: {
-                        "Authorization": `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
                 if (!response.ok) {
-                    throw new Error("Falha ao carregar contatos");
+                    throw new Error('Erro ao carregar contatos');
                 }
-
-                const contacts = await response.json();
-                const contactsList = document.getElementById('contacts-list');
-                const adminStatus = isAdmin();
-
-                if (contacts.length === 0) {
-                    contactsList.innerHTML = '<p class="no-contacts">Nenhum contato encontrado</p>';
-                    return;
-                }
-
-                contactsList.innerHTML = '';
-                contacts.forEach(contact => {
-                    const date = new Date(contact.createdAt).toLocaleDateString('pt-BR');
-                    const li = document.createElement("div");
-                    li.className = "contact-item";
-                    
-                    // Adiciona os botões de editar e excluir apenas se for admin
-                    const actionButtons = adminStatus ? `
-                        <div class="contact-actions">
-                            <button onclick="editContact('${contact._id}')" class="edit-btn">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="deleteContact('${contact._id}')" class="delete-btn">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    ` : '';
-
-                    li.innerHTML = `
-                        <div class="contact-icon">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="contact-info">
-                            <div class="contact-name">${contact.name}</div>
-                            <div class="contact-phone">${contact.phone}</div>
-                        </div>
-                        <div class="contact-date">
-                            <i class="fas fa-calendar-alt"></i> ${date}
-                        </div>
-                        ${actionButtons}
-                    `;
-                    contactsList.appendChild(li);
-                });
-            } catch (error) {
-                console.error("Erro:", error);
-                alert("Erro ao carregar contatos");
-            }
-        }
-
-        // Carregar contatos do mês
-        async function loadMonthContacts() {
-            try {
-                const response = await fetch("/api/contacts/month", {
-                    headers: {
-                        "Authorization": `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error("Falha ao carregar contatos do mês");
-                }
-
-                const contacts = await response.json();
-                const contactsList = document.getElementById('contacts-list');
-                const adminStatus = isAdmin();
-
-                if (contacts.length === 0) {
-                    contactsList.innerHTML = '<p class="no-contacts">Nenhum contato encontrado para este mês</p>';
-                    return;
-                }
-
-                contactsList.innerHTML = '';
-                contacts.forEach(contact => {
-                    const date = new Date(contact.createdAt).toLocaleDateString('pt-BR');
-                    const li = document.createElement("div");
-                    li.className = "contact-item";
-                    
-                    // Adiciona os botões de editar e excluir apenas se for admin
-                    const actionButtons = adminStatus ? `
-                        <div class="contact-actions">
-                            <button onclick="editContact('${contact._id}')" class="edit-btn">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="deleteContact('${contact._id}')" class="delete-btn">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    ` : '';
-
-                    li.innerHTML = `
-                        <div class="contact-icon">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="contact-info">
-                            <div class="contact-name">${contact.name}</div>
-                            <div class="contact-phone">${contact.phone}</div>
-                        </div>
-                        <div class="contact-date">
-                            <i class="fas fa-calendar-alt"></i> ${date}
-                        </div>
-                        ${actionButtons}
-                    `;
-                    contactsList.appendChild(li);
-                });
-            } catch (error) {
-                console.error("Erro:", error);
-                alert("Erro ao carregar contatos do mês");
-            }
-        }
-
-        // Função para verificar se é admin
-        function isAdmin() {
-            const username = localStorage.getItem('username');
-            return username === 'Anderson';
-        }
-
-        // Função para alternar o painel de admin
-        function toggleAdminPanel() {
-            const adminPanel = document.getElementById('admin-panel');
-            if (isAdmin()) {
-                adminPanel.style.display = 'block';
-            } else {
-                adminPanel.style.display = 'none';
-            }
-        }
-
-        // Mostrar/esconder botão de usuários baseado na permissão
-        function setupUsersButton() {
-            const usersButton = document.getElementById('users-button');
-            if (isAdmin()) {
-                usersButton.style.display = 'flex';
-            }
-        }
-
-        // Função para listar usuários
-        async function showUsersList() {
-            try {
-                const response = await fetch('/admin/users', {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
 
                 const data = await response.json();
+                const contactsList = document.getElementById('contacts-list');
+                const emptyState = document.getElementById('empty-state');
+                
+                // Limpa a lista atual
+                contactsList.innerHTML = '';
+                
+                // Readiciona o estado vazio
+                contactsList.appendChild(emptyState);
 
-                if (!response.ok) {
-                    throw new Error(data.message || 'Erro ao listar usuários');
+                if (!data.contacts || data.contacts.length === 0) {
+                    emptyState.style.display = 'block';
+                    document.getElementById('empty-month').textContent = 'todos os meses';
+                    return;
                 }
 
-                const usersModal = document.getElementById('users-modal');
-                const usersList = document.getElementById('users-list');
-                
-                usersList.innerHTML = data.users.map(user => `
-                    <div class="user-item">
-                        <span>${user.username}</span>
-                        ${user.username !== 'Anderson' ? `
-                            <button onclick="deleteUser('${user.username}')" class="delete-btn">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        ` : ''}
-                    </div>
-                `).join('');
+                emptyState.style.display = 'none';
 
-                usersModal.style.display = 'block';
+                // Renderiza os contatos
+                data.contacts.forEach(contact => {
+                    const contactElement = createContactElement(contact);
+                    contactsList.appendChild(contactElement);
+                });
+
+                // Atualiza o texto do mês selecionado
+                const selectedMonth = document.getElementById('selected-month');
+                if (selectedMonth) {
+                    selectedMonth.textContent = 'Todos';
+                }
 
             } catch (error) {
-                console.error('Erro ao listar usuários:', error);
-                showNotification(error.message, 'error');
+                console.error('Erro:', error);
+                showNotification('Erro ao carregar contatos', true);
             }
         }
 
-        // Função para deletar usuário
-        async function deleteUser(username) {
-            if (!confirm(`Tem certeza que deseja deletar o usuário ${username}?`)) {
-                return;
-            }
-
+        // Função para carregar contatos de um mês específico
+        async function loadMonthContacts(month) {
             try {
-                const response = await fetch(`/admin/users/${username}`, {
-                    method: 'DELETE',
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const response = await fetch(`/api/contacts/month/${month}`, {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
                 if (!response.ok) {
-                    throw new Error('Erro ao deletar usuário');
+                    throw new Error('Erro ao carregar contatos');
                 }
 
-                showNotification('Usuário deletado com sucesso!', 'success');
-                showUsersList(); // Atualiza a lista
+                const data = await response.json();
+                const contactsList = document.getElementById('contacts-list');
+                const emptyState = document.getElementById('empty-state');
+                const emptyMonth = document.getElementById('empty-month');
+                const selectedMonthSpan = document.getElementById('selected-month');
+                
+                // Atualiza o mês selecionado
+                const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                                  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                const monthName = monthNames[parseInt(month) - 1];
+                selectedMonthSpan.textContent = monthName;
+
+                // Limpa a lista atual
+                contactsList.innerHTML = '';
+                
+                // Readiciona o estado vazio
+                contactsList.appendChild(emptyState);
+
+                if (!data.contacts || data.contacts.length === 0) {
+                    emptyMonth.textContent = monthName.toLowerCase();
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+                
+                // Renderiza os contatos
+                data.contacts.forEach(contact => {
+                    const contactElement = createContactElement(contact);
+                    contactsList.appendChild(contactElement);
+                });
 
             } catch (error) {
-                console.error('Erro ao deletar usuário:', error);
-                showNotification(error.message, 'error');
+                console.error('Erro:', error);
+                showNotification('Erro ao carregar contatos', true);
             }
         }
 
-        // Função para fechar modal de usuários
-        function closeUsersModal() {
-            document.getElementById('users-modal').style.display = 'none';
+        // Função para criar elemento de contato
+        function createContactElement(contact) {
+            const contactElement = document.createElement('div');
+            contactElement.className = 'contact-item';
+            
+            const birthday = contact.birthday ? new Date(contact.birthday).toLocaleDateString('pt-BR') : 'Não informado';
+            const ownerInfo = contact.owner && contact.owner !== localStorage.getItem('username') ? 
+                `<p><i class="fas fa-user"></i> Adicionado por: ${contact.owner}</p>` : '';
+            
+            contactElement.innerHTML = `
+                <div class="contact-info">
+                    <h3>${contact.name}</h3>
+                    <p><i class="fas fa-phone"></i> ${contact.phone}</p>
+                    <p><i class="fas fa-birthday-cake"></i> ${birthday}</p>
+                    ${ownerInfo}
+                </div>
+                <div class="contact-actions">
+                    <button onclick="editContact('${contact._id}')" class="edit-btn">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteContact('${contact._id}')" class="delete-btn">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            return contactElement;
         }
 
-        // Inicialização da página
-        async function initializePage() {
-            const username = localStorage.getItem('username');
-            if (!username) {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            const usernameDisplay = document.getElementById('username-display');
-            if (usernameDisplay) {
-                usernameDisplay.textContent = `Olá, ${username}!`;
-            }
-
-            // Adicionar event listener para o filtro de mês
-            const monthFilter = document.getElementById('month-filter');
-            if (monthFilter) {
-                monthFilter.addEventListener('change', filterContacts);
-            }
-
-            await loadContacts();
-            toggleAdminPanel();
-            setupUsersButton();
-        }
-
-        // Carregar a página quando o documento estiver pronto
-        window.addEventListener('load', initializePage);
-        
         // Funções do Modal
         function showAddContactModal() {
             document.getElementById('add-contact-modal').style.display = 'block';
@@ -627,52 +743,37 @@
             }
         }
 
-        // Função para criar contato
-        async function createContact(event) {
-            event.preventDefault();
-            
-            const name = document.getElementById('name').value;
-            const phone = document.getElementById('phone').value;
-            const birthday = document.getElementById('birthday').value;
-
-            try {
-                const response = await fetch('/contacts', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({ name, phone, birthday })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Erro ao criar contato');
-                }
-
-                // Limpa o formulário
-                document.getElementById('contact-form').reset();
-                
-                // Fecha o modal
-                document.getElementById('add-contact-modal').style.display = 'none';
-                
-                // Recarrega a lista de contatos
+        // Função para filtrar contatos
+        function filterContacts() {
+            const monthFilter = document.getElementById('month-filter').value;
+            if (monthFilter === 'all') {
                 loadContacts();
-                
-                // Mostra mensagem de sucesso
-                showNotification('Contato adicionado com sucesso!', 'success');
-            } catch (error) {
-                showNotification(error.message, 'error');
+            } else {
+                loadMonthContacts(monthFilter);
             }
         }
 
-        // Função de logout
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('username');
-            window.location.href = 'index.html';
-        }
+        // Inicializa a página
+        window.addEventListener('load', async () => {
+            if (!localStorage.getItem('token')) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Atualiza o nome do usuário
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('username').textContent = username;
+            }
+
+            // Verifica se é admin
+            if (await isAdmin()) {
+                document.getElementById('admin-button').style.display = 'block';
+            }
+
+            // Carrega os contatos iniciais
+            await loadContacts();
+        });
     </script>
 </body>
 </html>

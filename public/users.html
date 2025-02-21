@@ -155,22 +155,70 @@
         }
 
         /* Estilização da barra de rolagem */
-        .users-list::-webkit-scrollbar {
+        ::-webkit-scrollbar {
             width: 8px;
         }
 
-        .users-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
+        ::-webkit-scrollbar-track {
+            background: #e8f5e9;
             border-radius: 4px;
         }
 
-        .users-list::-webkit-scrollbar-thumb {
+        ::-webkit-scrollbar-thumb {
             background: #4CAF50;
             border-radius: 4px;
         }
 
-        .users-list::-webkit-scrollbar-thumb:hover {
+        ::-webkit-scrollbar-thumb:hover {
             background: #388E3C;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 10px;
+            position: relative;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            color: #666;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #f5f5f5;
+            transition: all 0.3s ease;
+        }
+
+        .close:hover {
+            background: #e0e0e0;
+            color: #333;
         }
 
         @media (max-width: 768px) {
@@ -257,12 +305,21 @@
                     throw new Error('Falha ao carregar usuários');
                 }
 
-                const users = await response.json();
+                const data = await response.json();
+                if (!data.success || !data.users) {
+                    throw new Error('Dados de usuários inválidos');
+                }
+
                 const usersList = document.getElementById('users-list');
+                if (!usersList) {
+                    throw new Error('Elemento da lista de usuários não encontrado');
+                }
+
                 usersList.innerHTML = '';
 
-                users.forEach(user => {
-                    const role = user.username === 'Anderson' ? 'Administrador' : 'Usuário';
+                data.users.forEach(user => {
+                    const role = user.username.toLowerCase() === 'anderson' ? 'Administrador' : 'Usuário';
+                    const createdAt = user.createdAt ? new Date(user.createdAt).toLocaleDateString('pt-BR') : 'Data não disponível';
                     
                     const userCard = document.createElement('div');
                     userCard.className = 'user-card';
@@ -273,7 +330,7 @@
                         <div class="user-info">
                             <h3 class="user-name">${user.username}</h3>
                             <p class="user-details">
-                                Criado em: ${new Date(user.createdAt).toLocaleDateString()}
+                                Criado em: ${createdAt}
                                 <span class="user-role">${role}</span>
                             </p>
                         </div>
@@ -282,7 +339,7 @@
                 });
             } catch (error) {
                 console.error('Erro:', error);
-                alert('Erro ao carregar usuários');
+                alert(error.message || 'Erro ao carregar usuários');
             }
         }
 

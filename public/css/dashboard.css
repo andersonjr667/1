@@ -200,27 +200,39 @@ body {
 }
 
 /* Filtros */
-.filter-container {
-    margin-bottom: 20px;
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+.filters-section {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+    gap: 1rem;
 }
 
 .filter-group {
     display: flex;
-    gap: 10px;
     align-items: center;
-    margin-top: 10px;
+    gap: 10px;
 }
 
 .filter-group select {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-family: inherit;
+    padding: 8px 12px;
+    border: 2px solid #E8F5E9;
+    border-radius: 8px;
+    background-color: white;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: #2E7D32;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.filter-group select:hover {
+    border-color: #4CAF50;
+}
+
+.filter-group select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
 }
 
 .filter-btn {
