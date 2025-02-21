@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BoaParte - Registro</title>
     <link rel="icon" type="image/png" href="images/image.png">
     <link rel="stylesheet" href="css/styles.css">
@@ -20,34 +20,63 @@
             align-items: center;
             justify-content: center;
             background: #4CAF50;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before,
+        body::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+
+        body::before {
+            top: -150px;
+            left: -150px;
+        }
+
+        body::after {
+            bottom: -150px;
+            right: -150px;
         }
 
         .register-container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            width: 100%;
+            background: #ffffff;
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            width: 90%;
             max-width: 400px;
             text-align: center;
             position: relative;
-            backdrop-filter: blur(10px);
+            z-index: 1;
+            margin: 20px;
         }
 
         .logo {
             width: 120px;
             margin-bottom: 1.5rem;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
         }
 
         h2 {
             color: #2E7D32;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.8rem;
             font-size: 1.8rem;
+            font-weight: 600;
         }
 
         .input-group {
             margin-bottom: 1.2rem;
             text-align: left;
+            background: #ffffff;
+            padding: 0.5rem;
+            border-radius: 10px;
         }
 
         .input-group label {
@@ -55,6 +84,7 @@
             margin-bottom: 0.5rem;
             color: #2E7D32;
             font-weight: 500;
+            font-size: 0.95rem;
         }
 
         .input-group input {
@@ -62,10 +92,11 @@
             padding: 12px;
             border: 2px solid #E8F5E9;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 16px;
             transition: all 0.3s ease;
             box-sizing: border-box;
             font-family: 'Poppins', sans-serif;
+            background: #ffffff;
         }
 
         .input-group input:focus {
@@ -78,51 +109,56 @@
             background: #4CAF50;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 14px 24px;
+            border-radius: 10px;
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             width: 100%;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
             transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .register-btn:hover {
             background: #388E3C;
             transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
         .back-link {
             color: #4CAF50;
             text-decoration: none;
             display: inline-block;
-            margin-top: 1.5rem;
+            margin-top: 1.8rem;
             font-weight: 500;
             transition: all 0.3s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
         }
 
         .back-link:hover {
             color: #2E7D32;
             transform: translateX(-3px);
-        }
-
-        .back-link i {
-            margin-right: 5px;
+            background: rgba(76, 175, 80, 0.1);
         }
 
         .notification {
             position: fixed;
             top: 20px;
-            right: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             padding: 15px 25px;
             border-radius: 8px;
-            color: white;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
             font-weight: 500;
             display: none;
             z-index: 1000;
             animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .notification.success {
@@ -145,17 +181,98 @@
         }
 
         @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+
             .register-container {
-                margin: 1rem;
-                padding: 1.5rem;
+                margin: 10px;
+                padding: 1.8rem;
+                width: 100%;
+            }
+
+            body::before,
+            body::after {
+                width: 200px;
+                height: 200px;
+            }
+
+            body::before {
+                top: -100px;
+                left: -100px;
+            }
+
+            body::after {
+                bottom: -100px;
+                right: -100px;
             }
 
             .logo {
-                width: 100px;
+                width: 90px;
+                margin-bottom: 1rem;
             }
 
             h2 {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
+                margin-bottom: 1.2rem;
+            }
+
+            .input-group {
+                margin-bottom: 1rem;
+            }
+
+            .input-group label {
+                font-size: 0.9rem;
+            }
+
+            .input-group input {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .register-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            .back-link {
+                margin-top: 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .register-container {
+                padding: 1.2rem;
+                margin: 10px;
+            }
+
+            .logo {
+                width: 80px;
+                margin-bottom: 0.8rem;
+            }
+
+            .input-group {
+                margin-bottom: 0.8rem;
+            }
+        }
+
+        @media (hover: none) {
+            .register-btn:hover {
+                transform: none;
+            }
+
+            .register-btn:active {
+                background: #388E3C;
+                transform: scale(0.98);
+            }
+
+            .back-link:hover {
+                transform: none;
+            }
+
+            .back-link:active {
+                transform: translateX(-3px);
             }
         }
     </style>

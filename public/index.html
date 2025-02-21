@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BoaParte - Login</title>
     <link rel="icon" type="image/png" href="images/image.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -52,6 +52,7 @@
             width: 100%;
             max-width: 400px;
             padding: 20px;
+            margin: 20px;
         }
 
         .login-box {
@@ -60,6 +61,7 @@
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             text-align: center;
+            width: 100%;
         }
 
         .logo {
@@ -83,7 +85,7 @@
             padding: 15px 45px;
             border: 2px solid #e0e0e0;
             border-radius: 10px;
-            font-size: 1rem;
+            font-size: 16px;
             transition: all 0.3s ease;
         }
 
@@ -100,6 +102,19 @@
             transform: translateY(-50%);
             color: #4CAF50;
             font-size: 1.2rem;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 0;
+            font-size: 1.1rem;
         }
 
         .btn {
@@ -135,17 +150,127 @@
             text-decoration: underline;
         }
 
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            display: none;
+            width: auto;
+            min-width: 280px;
+            max-width: 400px;
+            text-align: left;
+            animation: slideInRight 0.3s ease;
+            color: #fff;
+        }
+
+        .notification.success {
+            background: #4CAF50;
+            border-left: 4px solid #2E7D32;
+        }
+
+        .notification.error {
+            background: #f44336;
+            border-left: 4px solid #d32f2f;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
         @media (max-width: 480px) {
+            body::before {
+                width: 300px;
+                height: 300px;
+                top: -150px;
+                left: -150px;
+            }
+
+            body::after {
+                width: 250px;
+                height: 250px;
+                bottom: -125px;
+                right: -125px;
+            }
+
             .login-container {
-                padding: 15px;
+                padding: 10px;
+                margin: 10px;
             }
 
             .login-box {
-                padding: 30px 20px;
+                padding: 25px 15px;
+            }
+
+            .logo {
+                width: 100px;
+                margin-bottom: 20px;
             }
 
             h2 {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
+                margin-bottom: 20px;
+            }
+
+            .input-group input {
+                padding: 12px 40px;
+                font-size: 14px;
+            }
+
+            .btn {
+                padding: 12px;
+                font-size: 0.9rem;
+            }
+
+            .notification {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                width: auto;
+                min-width: 0;
+                padding: 12px 20px;
+                font-size: 0.9em;
+            }
+        }
+
+        @media (max-height: 600px) {
+            .login-container {
+                margin: 10px;
+            }
+
+            .logo {
+                width: 80px;
+                margin-bottom: 15px;
+            }
+
+            h2 {
+                margin-bottom: 15px;
+            }
+
+            .input-group {
+                margin-bottom: 15px;
+            }
+        }
+
+        @media (hover: none) {
+            .btn:hover {
+                transform: none;
+            }
+
+            .btn:active {
+                background: #388E3C;
+                transform: scale(0.98);
             }
         }
     </style>

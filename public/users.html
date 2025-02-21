@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BoaParte - Usuários</title>
     <link rel="icon" type="image/png" href="images/image.png">
     <link rel="stylesheet" href="css/styles.css">
@@ -26,6 +26,8 @@
             margin: 20px auto;
             padding: 0 20px;
             flex: 1;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .users-panel {
@@ -36,6 +38,7 @@
             display: flex;
             flex-direction: column;
             height: calc(100vh - 40px);
+            margin: 0 auto;
         }
 
         .panel-header {
@@ -68,12 +71,9 @@
             margin-bottom: 15px;
             display: flex;
             align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
             transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .user-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .user-avatar {
@@ -91,6 +91,7 @@
 
         .user-info {
             flex: 1;
+            min-width: 200px;
         }
 
         .user-name {
@@ -123,10 +124,12 @@
         .action-buttons {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .btn {
             flex: 1;
+            min-width: 120px;
             padding: 12px;
             border: none;
             border-radius: 8px;
@@ -154,25 +157,6 @@
             transform: translateY(-1px);
         }
 
-        /* Estilização da barra de rolagem */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #e8f5e9;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #4CAF50;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #388E3C;
-        }
-
         .modal {
             display: none;
             position: fixed;
@@ -190,11 +174,11 @@
             margin: 15% auto;
             padding: 20px;
             border: 1px solid #888;
-            width: 80%;
+            width: 90%;
             max-width: 500px;
             border-radius: 10px;
             position: relative;
-            max-height: 70vh;
+            max-height: 80vh;
             overflow-y: auto;
         }
 
@@ -231,18 +215,118 @@
                 height: calc(100vh - 20px);
             }
 
+            .panel-header {
+                padding: 15px;
+            }
+
+            .panel-header h1 {
+                font-size: 20px;
+            }
+
+            .users-list {
+                padding: 15px;
+            }
+
             .user-card {
-                flex-direction: column;
-                text-align: center;
+                padding: 12px;
+                gap: 10px;
             }
 
             .user-avatar {
-                margin: 0 0 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .user-info {
+                min-width: 150px;
+            }
+
+            .btn {
+                min-width: 100px;
+                padding: 10px;
+                font-size: 0.9em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 5px;
+                margin: 5px;
+            }
+
+            .panel-header h1 {
+                font-size: 18px;
+            }
+
+            .panel-header p {
+                font-size: 0.9em;
+            }
+
+            .user-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .user-info {
+                width: 100%;
+                min-width: auto;
             }
 
             .action-buttons {
-                flex-direction: column;
+                width: 100%;
+                justify-content: space-between;
             }
+
+            .btn {
+                min-width: 45%;
+                padding: 8px;
+            }
+
+            .modal-content {
+                margin: 10% auto;
+                padding: 15px;
+                max-height: 90vh;
+            }
+        }
+
+        @media (hover: none) {
+            .user-card:hover {
+                transform: none;
+            }
+
+            .user-card:active {
+                transform: scale(0.98);
+            }
+
+            .btn:hover {
+                opacity: 1;
+            }
+
+            .btn:active {
+                opacity: 0.8;
+                transform: scale(0.98);
+            }
+        }
+
+        /* Estilização da barra de rolagem */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #e8f5e9;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4CAF50;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #388E3C;
         }
     </style>
 </head>
