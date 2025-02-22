@@ -55,6 +55,10 @@ const userSchema = new mongoose.Schema({
         type: String, 
         required: true
     },
+    role: {
+        type: String,
+        default: 'user'
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -133,8 +137,14 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Função para verificar se é admin
-function isAdmin(username) {
-    return username === 'Anderson';
+async function isAdmin(username) {
+    try {
+        const user = await User.findOne({ username });
+        return user && user.role === 'admin';
+    } catch (error) {
+        console.error('Erro ao verificar admin:', error);
+        return false;
+    }
 }
 
 // Rota de login
@@ -151,32 +161,32 @@ app.post("/login", async (req, res) => {
 
         const user = await User.findOne({ username });
 
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: 'Usuário não encontrado'
-            });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
         }
 
-        const validPassword = await bcrypt.compare(password, user.password);
-
-        if (!validPassword) {
-            return res.status(401).json({
-                success: false,
-                message: 'Senha incorreta'
-            });
+        // Se for o Anderson e ainda não for admin, atualiza para admin
+        if (username === 'Anderson' && user.role !== 'admin') {
+            user.role = 'admin';
+            await user.save();
         }
 
+        // Incluir o role no token JWT
         const token = jwt.sign(
-            { username: user.username },
-            JWT_SECRET,
-            { expiresIn: '24h' }
+            { 
+                userId: user._id, 
+                username: user.username,
+                role: user.role 
+            }, 
+            JWT_SECRET, 
+            { expiresIn: '1h' }
         );
 
-        res.json({
-            success: true,
-            token,
-            username: user.username
+        res.json({ 
+            success: true, 
+            token, 
+            username: user.username, 
+            role: user.role 
         });
     } catch (error) {
         console.error('Erro no login:', error);
@@ -188,8 +198,15 @@ app.post("/login", async (req, res) => {
 });
 
 // Rota de registro
-app.post("/register", async (req, res) => {
+app.post("/api/register", async (req, res) => {
     try {
+        if (!mongoose.connection.readyState) {
+            return res.status(500).json({
+                success: false,
+                message: 'Erro ao conectar com o banco de dados'
+            });
+        }
+
         const { username, password, registrationCode } = req.body;
 
         if (!username || !password || !registrationCode) {
@@ -242,7 +259,7 @@ app.post("/register", async (req, res) => {
 app.get('/api/contacts', authenticateToken, async (req, res) => {
     try {
         let contacts;
-        if (isAdmin(req.user.username)) {
+        if (req.user.role === 'admin') {
             contacts = await Contact.find().sort({ createdAt: -1 });
         } else {
             contacts = await Contact.find({ username: req.user.username }).sort({ createdAt: -1 });
@@ -309,7 +326,7 @@ app.get('/api/contacts/month/:month', authenticateToken, async (req, res) => {
         };
 
         // Se não for admin, filtrar apenas os contatos do usuário
-        if (!isAdmin(req.user.username)) {
+        if (req.user.role !== 'admin') {
             query.username = req.user.username;
         }
 
@@ -386,7 +403,7 @@ app.put("/api/contacts/:id", authenticateToken, async (req, res) => {
             });
         }
 
-        if (contact.owner !== req.user.username && !isAdmin(req.user.username)) {
+        if (contact.owner !== req.user.username && req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
                 message: 'Não autorizado a editar este contato'
@@ -426,7 +443,7 @@ app.delete("/api/contacts/:id", authenticateToken, async (req, res) => {
             });
         }
 
-        if (contact.owner !== req.user.username && !isAdmin(req.user.username)) {
+        if (contact.owner !== req.user.username && req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
                 message: 'Não autorizado a deletar este contato'
@@ -451,7 +468,8 @@ app.delete("/api/contacts/:id", authenticateToken, async (req, res) => {
 // Rota para listar usuários (apenas admin)
 app.get('/api/users', authenticateToken, async (req, res) => {
     try {
-        if (!isAdmin(req.user.username)) {
+        // Verifica se o usuário tem role admin no token
+        if (!req.user.role || req.user.role !== 'admin') {
             return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
@@ -461,7 +479,7 @@ app.get('/api/users', authenticateToken, async (req, res) => {
         const users = await User.find({}, { password: 0 });
         res.json({
             success: true,
-            users: users
+            users
         });
     } catch (error) {
         console.error('Erro ao listar usuários:', error);
@@ -475,8 +493,9 @@ app.get('/api/users', authenticateToken, async (req, res) => {
 // Rota para deletar usuário (apenas admin)
 app.delete('/api/users/:username', authenticateToken, async (req, res) => {
     try {
-        if (!isAdmin(req.user.username)) {
-            return res.status(403).json({
+        // Verifica se o usuário tem role admin no token
+        if (!req.user.role || req.user.role !== 'admin') {
+                    return res.status(403).json({
                 success: false,
                 message: 'Acesso negado'
             });
@@ -528,6 +547,161 @@ app.post('/logout', authenticateToken, (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Erro ao realizar logout'
+        });
+    }
+});
+
+// Rota temporária para atualizar roles dos usuários
+app.get('/update-user-roles', async (req, res) => {
+    try {
+        // Atualiza todos os usuários para role 'user'
+        await User.updateMany({}, { role: 'user' });
+        
+        // Atualiza o Anderson para role 'admin'
+        await User.findOneAndUpdate(
+            { username: 'Anderson' },
+            { role: 'admin' },
+            { new: true }
+        );
+
+        res.json({ success: true, message: 'Roles atualizados com sucesso' });
+    } catch (error) {
+        console.error('Erro ao atualizar roles:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Erro ao atualizar roles dos usuários' 
+        });
+    }
+});
+
+// Rota para obter estatísticas do sistema (apenas admin)
+app.get('/api/admin/stats', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user.role || req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        // Obter total de usuários
+        const totalUsers = await User.countDocuments();
+
+        // Obter total de contatos
+        const totalContacts = await Contact.countDocuments();
+
+        // Obter contatos criados hoje
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const contactsToday = await Contact.countDocuments({
+            createdAt: { $gte: today }
+        });
+
+        res.json({
+            success: true,
+            totalUsers,
+            totalContacts,
+            contactsToday
+        });
+    } catch (error) {
+        console.error('Erro ao obter estatísticas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao obter estatísticas'
+        });
+    }
+});
+
+// Rota para alterar o papel de um usuário (apenas admin)
+app.put('/api/users/:username/role', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user.role || req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        const { username } = req.params;
+        const { role } = req.body;
+
+        if (!['admin', 'user'].includes(role)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Papel inválido'
+            });
+        }
+
+        // Não permitir alterar o papel do Anderson
+        if (username.toLowerCase() === 'anderson') {
+            return res.status(403).json({
+                success: false,
+                message: 'Não é permitido alterar o papel deste usuário'
+            });
+        }
+
+        const user = await User.findOneAndUpdate(
+            { username },
+            { role },
+            { new: true }
+        );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuário não encontrado'
+            });
+        }
+
+        res.json({
+            success: true,
+            message: 'Papel do usuário atualizado com sucesso',
+            user: {
+                username: user.username,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        console.error('Erro ao alterar papel do usuário:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao alterar papel do usuário'
+        });
+    }
+});
+
+// Rota para obter estatísticas de contatos por usuário (apenas admin)
+app.get('/api/admin/contacts-by-user', authenticateToken, async (req, res) => {
+    try {
+        if (!req.user.role || req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso negado'
+            });
+        }
+
+        // Agrupa os contatos por usuário e conta quantos cada um tem
+        const contactStats = await Contact.aggregate([
+            {
+                $group: {
+                    _id: '$username',
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: { count: -1 }
+            }
+        ]);
+
+        res.json({
+            success: true,
+            stats: contactStats
+        });
+    } catch (error) {
+        console.error('Erro ao obter estatísticas de contatos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao obter estatísticas de contatos'
         });
     }
 });

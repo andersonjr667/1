@@ -279,43 +279,24 @@
     <div class="login-container">
         <div class="login-box">
             <img src="images/image2.png" alt="Logo" class="logo">
-            <h2>Bem-vindo ao BoaParte</h2>
-            <form id="login-form" onsubmit="event.preventDefault(); login();">
+            <h2>Login</h2>
+            <form id="login-form">
                 <div class="input-group">
                     <i class="fas fa-user"></i>
-                    <input type="text" id="username" placeholder="Nome de usuário" required>
+                    <input type="text" id="username" placeholder="Usuário" required>
                 </div>
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
                     <input type="password" id="password" placeholder="Senha" required>
-                    <button type="button" class="toggle-password"><i class="fas fa-eye"></i></button>
+                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
                 <button type="submit" class="btn">Entrar</button>
             </form>
-            <p class="register-link">Não tem uma conta? <a href="#" id="register-link">Registre-se</a></p>
+            <p class="register-link">Não tem uma conta? <a href="register.html">Registre-se</a></p>
+            <a id="manage-users-link" href="manage-users.html" style="display: none;">Gerenciar Usuários</a>
         </div>
-    </div>
-
-    <!-- Register Form -->
-    <div class="register-container" style="display: none;">
-        <h2>Registro</h2>
-        <form id="register-form">
-            <div class="input-group">
-                <i class="fas fa-user"></i>
-                <input type="text" id="registerUser" placeholder="Nome de usuário" required minlength="3">
-            </div>
-            <div class="input-group">
-                <i class="fas fa-lock"></i>
-                <input type="password" id="registerPass" placeholder="Senha" required minlength="6">
-                <i class="fas fa-eye-slash toggle-password"></i>
-            </div>
-            <div class="input-group">
-                <i class="fas fa-key"></i>
-                <input type="text" id="registrationCode" placeholder="Código de registro" required>
-            </div>
-            <button type="submit">Criar Conta</button>
-        </form>
-        <p>Já tem uma conta? <a href="#" id="login-link">Faça login</a></p>
     </div>
 
     <!-- Notification Component -->
@@ -327,6 +308,21 @@
         </button>
     </div>
 
+    <script>
+        window.onload = function() {
+            localStorage.removeItem('token');
+        };
+    </script>
+    <script>
+        // Verifica se o usuário é administrador
+        function checkAdmin() {
+            const userProfile = JSON.parse(localStorage.getItem('userProfile'));
+            if (userProfile && userProfile.role === 'admin') {
+                document.getElementById('manage-users-link').style.display = 'block';
+            }
+        }
+        checkAdmin();
+    </script>
     <script src="js/script.js"></script>
 </body>
 </html>

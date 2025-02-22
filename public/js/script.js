@@ -57,9 +57,18 @@ async function login() {
         // Salva o token e username
         localStorage.setItem("token", data.token);
         localStorage.setItem("username", data.username);
+        localStorage.setItem("role", data.role);
 
         showMessage("Login realizado com sucesso!", false);
         
+        if (data.role === 'admin') {
+            // Mostrar funcionalidade de gerenciar usuários
+            document.getElementById('manage-users-link').style.display = 'block';
+        } else {
+            // Esconder funcionalidade de gerenciar usuários
+            document.getElementById('manage-users-link').style.display = 'none';
+        }
+
         // Redireciona para o dashboard
         setTimeout(() => {
             window.location.href = "dashboard.html";
@@ -359,37 +368,54 @@ async function deleteContact(contactId) {
 
 // Event Listeners e Inicialização
 document.addEventListener('DOMContentLoaded', () => {
-    // Form submissions
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        login();
-    });
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            login();
+        });
+    }
 
-    document.getElementById('register-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        register();
-    });
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            register();
+        });
+    }
 
     // Toggle form links
-    document.getElementById('register-link').addEventListener('click', (e) => {
-        e.preventDefault();
-        toggleForms();
-    });
+    const registerLink = document.getElementById('register-link');
+    if (registerLink) {
+        registerLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleForms();
+        });
+    }
 
-    document.getElementById('login-link').addEventListener('click', (e) => {
-        e.preventDefault();
-        toggleForms();
-    });
+    const loginLink = document.getElementById('login-link');
+    if (loginLink) {
+        loginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            toggleForms();
+        });
+    }
 
     // Password visibility toggles
-    document.querySelectorAll('.toggle-password').forEach(toggle => {
-        toggle.addEventListener('click', () => togglePasswordVisibility(toggle));
-    });
+    const passwordToggles = document.querySelectorAll('.toggle-password');
+    if (passwordToggles) {
+        passwordToggles.forEach(toggle => {
+            toggle.addEventListener('click', () => togglePasswordVisibility(toggle));
+        });
+    }
 
     // Close notification button
-    document.getElementById('close-notification').addEventListener('click', () => {
-        document.getElementById('notification').style.display = 'none';
-    });
+    const closeNotificationButton = document.getElementById('close-notification');
+    if (closeNotificationButton) {
+        closeNotificationButton.addEventListener('click', () => {
+            document.getElementById('notification').style.display = 'none';
+        });
+    }
 
     // Check if user is already logged in
     const token = localStorage.getItem('token');
@@ -400,16 +426,23 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }).catch(error => {
             console.error('Erro ao validar token:', error);
-            localStorage.removeItem('token');
+            localStorage.removeItem("token");
         });
     }
 
     // Carregar contatos
-    document.getElementById('month-filter').addEventListener('change', loadContacts);
+    const monthFilter = document.getElementById('month-filter');
+    if (monthFilter) {
+        monthFilter.addEventListener('change', loadContacts);
+    }
 
     // Editar contato
-    document.getElementById('edit-form').addEventListener('submit', updateContact);
+    const editForm = document.getElementById('edit-form');
+    if (editForm) {
+        editForm.addEventListener('submit', updateContact);
+    }
 });
+
 // Função para adicionar usuário
 async function addUser() {
     try {
