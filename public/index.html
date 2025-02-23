@@ -190,6 +190,49 @@
         }
 
         @media (max-width: 480px) {
+            .login-container {
+                padding: 10px;
+                margin: 10px;
+            }
+
+            .login-box {
+                padding: 25px;
+                border-radius: 15px;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+                margin-bottom: 20px;
+            }
+
+            .logo {
+                width: 100px;
+                margin-bottom: 20px;
+            }
+
+            .input-group {
+                margin-bottom: 15px;
+            }
+
+            .input-group input {
+                padding: 12px 40px;
+                font-size: 14px;
+            }
+
+            .input-group i {
+                font-size: 16px;
+            }
+
+            button {
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .register-link {
+                font-size: 14px;
+                margin-top: 15px;
+            }
+
             body::before {
                 width: 300px;
                 height: 300px;
@@ -203,74 +246,44 @@
                 bottom: -125px;
                 right: -125px;
             }
+        }
 
-            .login-container {
-                padding: 10px;
-                margin: 10px;
-            }
-
+        @media (max-width: 320px) {
             .login-box {
-                padding: 25px 15px;
-            }
-
-            .logo {
-                width: 100px;
-                margin-bottom: 20px;
+                padding: 20px;
             }
 
             h2 {
-                font-size: 1.4rem;
-                margin-bottom: 20px;
-            }
-
-            .input-group input {
-                padding: 12px 40px;
-                font-size: 14px;
-            }
-
-            .btn {
-                padding: 12px;
-                font-size: 0.9rem;
-            }
-
-            .notification {
-                top: 10px;
-                right: 10px;
-                left: 10px;
-                width: auto;
-                min-width: 0;
-                padding: 12px 20px;
-                font-size: 0.9em;
-            }
-        }
-
-        @media (max-height: 600px) {
-            .login-container {
-                margin: 10px;
+                font-size: 1.3rem;
             }
 
             .logo {
                 width: 80px;
-                margin-bottom: 15px;
             }
 
-            h2 {
-                margin-bottom: 15px;
+            .input-group input {
+                padding: 10px 35px;
+                font-size: 13px;
             }
 
-            .input-group {
-                margin-bottom: 15px;
+            .input-group i {
+                font-size: 14px;
+            }
+
+            button {
+                padding: 10px;
+                font-size: 13px;
             }
         }
 
         @media (hover: none) {
-            .btn:hover {
-                transform: none;
+            button:active {
+                transform: scale(0.98);
+                background-color: #43A047;
             }
 
-            .btn:active {
-                background: #388E3C;
-                transform: scale(0.98);
+            .input-group input:focus {
+                font-size: 16px; /* Previne zoom automático em iOS */
             }
         }
     </style>
@@ -280,49 +293,124 @@
         <div class="login-box">
             <img src="images/image2.png" alt="Logo" class="logo">
             <h2>Login</h2>
-            <form id="login-form">
+            <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="input-group">
                     <i class="fas fa-user"></i>
-                    <input type="text" id="username" placeholder="Usuário" required>
+                    <input type="text" id="username" placeholder="Nome de usuário" required autocomplete="username">
                 </div>
                 <div class="input-group">
                     <i class="fas fa-lock"></i>
-                    <input type="password" id="password" placeholder="Senha" required>
-                    <button type="button" class="toggle-password" onclick="togglePasswordVisibility(this)">
+                    <input type="password" id="password" placeholder="Senha" required autocomplete="current-password">
+                    <button type="button" class="toggle-password" onclick="togglePassword()">
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
-                <button type="submit" class="btn">Entrar</button>
+                <button type="submit" class="btn">
+                    <span>Entrar</span>
+                    <i class="fas fa-sign-in-alt"></i>
+                </button>
             </form>
-            <p class="register-link">Não tem uma conta? <a href="register.html">Registre-se</a></p>
-            <a id="manage-users-link" href="manage-users.html" style="display: none;">Gerenciar Usuários</a>
+            <p class="register-link">
+                Não tem uma conta? <a href="register.html">Registre-se</a>
+            </p>
         </div>
     </div>
 
-    <!-- Notification Component -->
-    <div id="notification" class="notification" style="display: none;">
-        <i class="fas fa-info-circle notification-icon"></i>
-        <span id="notificationMessage"></span>
-        <button id="close-notification">
-            <i class="fas fa-times"></i>
-        </button>
+    <div id="notification" class="notification">
+        <span id="notification-message"></span>
     </div>
 
     <script>
-        window.onload = function() {
-            localStorage.removeItem('token');
-        };
-    </script>
-    <script>
-        // Verifica se o usuário é administrador
-        function checkAdmin() {
-            const userProfile = JSON.parse(localStorage.getItem('userProfile'));
-            if (userProfile && userProfile.role === 'admin') {
-                document.getElementById('manage-users-link').style.display = 'block';
+        // Função para alternar visibilidade da senha
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.querySelector('.toggle-password i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleButton.classList.remove('fa-eye');
+                toggleButton.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleButton.classList.remove('fa-eye-slash');
+                toggleButton.classList.add('fa-eye');
             }
         }
-        checkAdmin();
+
+        // Função para mostrar notificação
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+            
+            notification.className = `notification ${isError ? 'error' : 'success'}`;
+            notificationMessage.textContent = message;
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Função para lidar com o login
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const submitButton = event.target.querySelector('button[type="submit"]');
+
+            // Desabilita o botão durante o login
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Entrando...';
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', username);
+                    
+                    showNotification('Login realizado com sucesso!');
+                    
+                    // Redireciona imediatamente após o login bem-sucedido
+                    if (data.role === 'admin') {
+                        window.location.href = 'admin-dashboard.html';
+                    } else {
+                        window.location.href = 'dashboard.html';
+                    }
+                } else {
+                    throw new Error(data.message || 'Erro ao fazer login');
+                }
+            } catch (error) {
+                showNotification(error.message || 'Erro ao conectar com o servidor', true);
+                submitButton.disabled = false;
+                submitButton.innerHTML = '<span>Entrar</span><i class="fas fa-sign-in-alt"></i>';
+            }
+        }
+
+        // Adiciona evento de tecla para enviar o formulário ao pressionar Enter
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                const activeElement = document.activeElement;
+                if (activeElement.tagName === 'INPUT') {
+                    const form = document.getElementById('login-form');
+                    form.dispatchEvent(new Event('submit'));
+                }
+            }
+        });
+
+        // Auto-focus no campo de usuário ao carregar a página
+        window.addEventListener('load', () => {
+            document.getElementById('username').focus();
+        });
     </script>
-    <script src="js/script.js"></script>
 </body>
 </html>

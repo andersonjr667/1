@@ -47,9 +47,15 @@
                 position: static;
                 margin: 20px auto;
                 display: block;
+                width: 80px;
             }
             body {
                 padding: 10px;
+            }
+        }
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
             }
         }
         .users-button {
@@ -455,6 +461,124 @@
             .form-group input,
             .form-group select {
                 width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                margin-bottom: 1rem;
+            }
+
+            .dashboard-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .contact-list {
+                grid-template-columns: 1fr;
+                gap: 15px;
+                padding: 10px;
+            }
+
+            .contact-card {
+                padding: 15px;
+            }
+
+            .contact-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .contact-actions button {
+                width: 100%;
+                padding: 8px;
+                font-size: 14px;
+            }
+
+            .admin-buttons {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.5rem;
+                margin: 0.5rem 0;
+            }
+
+            .admin-dashboard-button,
+            .users-button {
+                max-width: none;
+                width: 100%;
+                margin: 0.25rem 0;
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .modal-content {
+                width: 90%;
+                padding: 15px;
+            }
+
+            .modal input,
+            .modal select {
+                padding: 10px;
+                font-size: 14px;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .filter-section input,
+            .filter-section select {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-header h1 {
+                font-size: 1.5rem;
+            }
+
+            .contact-card {
+                padding: 12px;
+            }
+
+            .contact-info h3 {
+                font-size: 16px;
+            }
+
+            .contact-info p {
+                font-size: 14px;
+            }
+
+            .timestamp {
+                font-size: 12px;
+                color: #666;
+                margin-top: 5px;
+            }
+
+            .notification {
+                left: 10px;
+                right: 10px;
+                bottom: 10px;
+                width: auto;
+                font-size: 14px;
+            }
+        }
+
+        /* Melhorias para touch devices */
+        @media (hover: none) {
+            .contact-actions button:active,
+            .admin-dashboard-button:active,
+            .users-button:active {
+                transform: scale(0.98);
+                opacity: 0.9;
+            }
+
+            .contact-card {
+                transition: none;
+            }
+
+            .contact-card:active {
+                transform: translateY(-2px);
             }
         }
     </style>
@@ -968,27 +1092,26 @@
             const contactElement = document.createElement('div');
             contactElement.className = 'contact-item';
             
-            const birthday = contact.birthday ? new Date(contact.birthday).toLocaleDateString('pt-BR') : 'Não informado';
-            const ownerInfo = contact.owner && contact.owner !== localStorage.getItem('username') ? 
-                `<p><i class="fas fa-user"></i> Adicionado por: ${contact.owner}</p>` : '';
-            
+            const timestamp = new Date(contact.timestamp);
+            const formattedDate = timestamp.toLocaleDateString('pt-BR');
+            const formattedTime = timestamp.toLocaleTimeString('pt-BR');
+
             contactElement.innerHTML = `
                 <div class="contact-info">
                     <h3>${contact.name}</h3>
+                    <p><i class="fas fa-envelope"></i> ${contact.email}</p>
                     <p><i class="fas fa-phone"></i> ${contact.phone}</p>
-                    <p><i class="fas fa-birthday-cake"></i> ${birthday}</p>
-                    ${ownerInfo}
+                    <p class="timestamp"><i class="far fa-clock"></i> ${formattedDate} ${formattedTime}</p>
                 </div>
                 <div class="contact-actions">
                     <button onclick="editContact('${contact._id}')" class="edit-btn">
-                        <i class="fas fa-edit"></i>
+                        <i class="fas fa-edit"></i> Editar
                     </button>
                     <button onclick="deleteContact('${contact._id}')" class="delete-btn">
-                        <i class="fas fa-trash"></i>
+                        <i class="fas fa-trash-alt"></i> Excluir
                     </button>
                 </div>
             `;
-            
             return contactElement;
         }
 

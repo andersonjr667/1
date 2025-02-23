@@ -146,6 +146,48 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
+        .contacts-table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .contacts-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px;
+        }
+
+        .contacts-table th,
+        .contacts-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .contacts-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .contacts-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .contacts-table td {
+            color: #666;
+        }
+
+        .timestamp {
+            white-space: nowrap;
+            font-size: 0.9em;
+            color: #888;
+        }
+
         .chart-title {
             color: #333;
             font-size: 18px;
@@ -158,42 +200,22 @@
             max-height: 400px;
             margin: 0 auto;
         }
-    
+
         @media (max-width: 768px) {
             body {
                 padding: 10px;
+            }
+
+            .header {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
             }
 
             .stats-grid {
                 grid-template-columns: 1fr;
                 gap: 15px;
                 margin: 15px 0;
-            }
-
-            .chart-container {
-                margin: 15px 0;
-            }
-
-            #contacts-chart {
-                height: 300px !important;
-            }
-
-            .admin-functions {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            .function-card {
-                padding: 15px;
-            }
-
-            .function-icon {
-                font-size: 24px;
-            }
-
-            .chart-title {
-                font-size: 16px;
-                margin-bottom: 15px;
             }
 
             .stat-card {
@@ -204,30 +226,130 @@
                 font-size: 24px;
             }
 
-            .stat-label {
-                font-size: 14px;
+            .chart-container {
+                margin: 15px 0;
+                padding: 15px;
+                overflow-x: auto;
             }
 
-            /* Ajusta a legenda do gráfico para dispositivos móveis */
             #contacts-chart {
-                max-height: none !important;
-                height: auto !important;
-                min-height: 300px;
+                height: 300px !important;
+                width: 100% !important;
+            }
+
+            .admin-functions {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .function-card {
+                padding: 15px;
+                min-height: auto;
+            }
+
+            .function-icon {
+                font-size: 22px;
+            }
+
+            .function-title {
+                font-size: 16px;
+                margin-bottom: 8px;
+            }
+
+            .function-description {
+                font-size: 13px;
+            }
+
+            .chart-title {
+                font-size: 16px;
+                margin-bottom: 15px;
+            }
+
+            .contacts-table-container {
+                margin: 15px 0;
+                padding: 10px;
+            }
+
+            .contacts-table th,
+            .contacts-table td {
+                padding: 10px;
+                font-size: 14px;
             }
         }
 
-        /* Ajustes para telas muito pequenas */
         @media (max-width: 480px) {
+            body {
+                padding: 8px;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
             .header h1 {
                 font-size: 20px;
             }
 
-            .function-card h3 {
-                font-size: 16px;
+            .stat-value {
+                font-size: 22px;
+            }
+
+            .stat-label {
+                font-size: 12px;
+            }
+
+            .logout-btn,
+            .back-btn {
+                width: 100%;
+                margin: 5px 0;
+                padding: 12px;
+                font-size: 14px;
+            }
+
+            .function-card {
+                padding: 12px;
+            }
+
+            .function-icon {
+                font-size: 20px;
+            }
+
+            .function-title {
+                font-size: 15px;
+            }
+
+            .function-description {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 320px) {
+            .header h1 {
+                font-size: 18px;
             }
 
             .stat-value {
-                font-size: 22px;
+                font-size: 20px;
+            }
+
+            .function-title {
+                font-size: 14px;
+            }
+        }
+
+        @media (hover: none) {
+            .function-card {
+                transition: none;
+            }
+
+            .function-card:active {
+                transform: scale(0.98);
+                background-color: #f8f8f8;
+            }
+
+            .logout-btn:active,
+            .back-btn:active {
+                opacity: 0.8;
             }
         }
     </style>
@@ -265,6 +387,23 @@
         <div class="chart-container">
             <h3 class="chart-title">Distribuição de Contatos por Usuário</h3>
             <canvas id="contacts-chart"></canvas>
+        </div>
+
+        <div class="contacts-table-container">
+            <h2 style="margin-top: 0; color: #2E7D32; margin-bottom: 20px;">Últimos Contatos</h2>
+            <table class="contacts-table">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th>Data/Hora</th>
+                    </tr>
+                </thead>
+                <tbody id="contacts-table-body">
+                    <!-- Dados serão preenchidos via JavaScript -->
+                </tbody>
+            </table>
         </div>
 
         <div class="admin-functions">
@@ -305,58 +444,42 @@
         // Carregar estatísticas
         async function loadStats() {
             try {
-                const [statsResponse, contactsResponse] = await Promise.all([
-                    fetch('/api/admin/stats', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    }),
-                    fetch('/api/admin/contacts-by-user', {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    })
-                ]);
-
-                if (!statsResponse.ok || !contactsResponse.ok) {
-                    throw new Error('Falha ao carregar dados');
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'admin.html';
+                    return;
                 }
 
-                const statsData = await statsResponse.json();
-                const contactsData = await contactsResponse.json();
-                
-                // Atualiza os números
-                document.getElementById('total-users').textContent = statsData.totalUsers;
-                document.getElementById('total-contacts').textContent = statsData.totalContacts;
-                document.getElementById('contacts-today').textContent = statsData.contactsToday;
-
-                // Cria o gráfico de pizza
-                const ctx = document.getElementById('contacts-chart').getContext('2d');
-                
-                // Gera cores aleatórias para cada usuário
-                const generateColors = (count) => {
-                    const colors = [];
-                    for (let i = 0; i < count; i++) {
-                        const hue = (i * 137.5) % 360;  // Distribuição uniforme de cores
-                        colors.push(`hsl(${hue}, 70%, 60%)`);
+                const response = await fetch('/api/admin/stats', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
                     }
-                    return colors;
-                };
+                });
 
-                // Prepara os dados para o gráfico
-                const labels = contactsData.stats.map(stat => stat._id || 'Sem usuário');
-                const data = contactsData.stats.map(stat => stat.count);
-                const colors = generateColors(labels.length);
-
-                // Destroi o gráfico anterior se existir
-                if (window.contactsChart) {
-                    window.contactsChart.destroy();
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar estatísticas');
                 }
 
-                // Cria o novo gráfico
-                window.contactsChart = createChart(ctx, labels, data, colors);
+                const data = await response.json();
+
+                // Atualiza os números
+                document.getElementById('total-users').textContent = data.totalUsers;
+                document.getElementById('total-contacts').textContent = data.totalContacts;
+                document.getElementById('contacts-today').textContent = data.contactsToday;
+
+                // Atualiza o gráfico
+                const ctx = document.getElementById('contacts-chart').getContext('2d');
+                const chartLabels = data.chartData.labels;
+                const chartData = data.chartData.data;
+                const chartColors = Array(data.chartData.data.length).fill('#4CAF50');
+                
+                createChart(ctx, chartLabels, chartData, chartColors);
+
+                // Carrega e exibe os últimos contatos
+                await loadRecentContacts();
             } catch (error) {
-                console.error('Erro ao carregar dados:', error);
+                console.error('Erro ao carregar estatísticas:', error);
+                alert('Erro ao carregar estatísticas. Por favor, tente novamente.');
             }
         }
 
@@ -407,19 +530,63 @@
         }
 
         // Atualiza o gráfico quando a orientação do dispositivo muda
-        window.addEventListener('resize', () => {
+        window.addEventListener('resize', debounce(() => {
             if (window.contactsChart) {
                 const ctx = document.getElementById('contacts-chart').getContext('2d');
-                const oldData = window.contactsChart.data;
                 window.contactsChart.destroy();
-                window.contactsChart = createChart(
-                    ctx,
-                    oldData.labels,
-                    oldData.datasets[0].data,
-                    oldData.datasets[0].backgroundColor
-                );
+                createChart(ctx, chartLabels, chartData, chartColors);
             }
-        });
+        }, 250));
+
+        // Função para debounce do resize
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Carrega e exibe os últimos contatos
+        async function loadRecentContacts() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/admin/recent-contacts', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar contatos recentes');
+                }
+
+                const contacts = await response.json();
+                const tableBody = document.getElementById('contacts-table-body');
+                tableBody.innerHTML = '';
+
+                contacts.forEach(contact => {
+                    const row = document.createElement('tr');
+                    const timestamp = new Date(contact.timestamp);
+                    const formattedDate = timestamp.toLocaleDateString('pt-BR');
+                    const formattedTime = timestamp.toLocaleTimeString('pt-BR');
+
+                    row.innerHTML = `
+                        <td>${contact.name}</td>
+                        <td>${contact.email}</td>
+                        <td>${contact.phone}</td>
+                        <td class="timestamp">${formattedDate} ${formattedTime}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erro ao carregar contatos recentes:', error);
+            }
+        }
 
         // Carrega as estatísticas quando a página carregar
         window.addEventListener('load', () => {
