@@ -126,12 +126,30 @@
         }
 
         .login-button:hover {
-            background: #43a047;
+            background: #388e3c;
             transform: translateY(-2px);
         }
 
         .login-button:active {
             transform: translateY(0);
+        }
+
+        .register-link {
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: #4caf50;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .register-link a:hover {
+            color: #388e3c;
+            text-decoration: underline;
         }
 
         .notification {
@@ -198,10 +216,12 @@
                 </div>
             </div>
             <button type="submit" class="login-button">
-                <i class="fas fa-sign-in-alt"></i>
-                Entrar
+                <i class="fas fa-sign-in-alt"></i> Entrar
             </button>
         </form>
+        <p class="register-link">
+            Não tem uma conta? <a href="/register">Registre-se</a>
+        </p>
     </div>
 
     <div id="notification" class="notification">

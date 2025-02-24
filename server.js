@@ -957,6 +957,11 @@ app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
 // Servir arquivos estáticos depois das rotas da API
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Rota específica para a página de registro
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'register.html'));
+});
+
 // Error handling middleware por último
 app.use((err, req, res, next) => {
     console.error('Erro no middleware:', err);
