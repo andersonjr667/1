@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
+const WhatsAppClient = require('./whatsapp');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,19 +17,6 @@ const VALID_REGISTRATION_CODE = process.env.REGISTRATION_CODE || 'BOAPARTE2024';
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Erro no middleware:', err);
-    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
-        return res.status(400).json({
-            valid: false,
-            message: 'Dados inválidos na requisição.'
-        });
-    }
-    next();
-});
 
 // MongoDB Connection with retry logic
 const connectDB = async () => {
@@ -83,6 +71,10 @@ const contactSchema = new mongoose.Schema({
     },
     birthday: {
         type: Date
+    },
+    receivedMessage: {
+        type: Boolean,
+        default: false
     },
     createdAt: {
         type: Date,
@@ -148,33 +140,40 @@ async function isAdmin(username) {
 }
 
 // Rota de login
-app.post("/login", async (req, res) => {
+app.post("/api/auth/login", async (req, res) => {
     try {
         const { username, password } = req.body;
 
         if (!username || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'Username e senha são obrigatórios'
+                message: 'Usuário e senha são obrigatórios'
             });
         }
 
+        // Buscar usuário no banco
         const user = await User.findOne({ username });
-
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(401).json({ success: false, message: 'Credenciais inválidas' });
+        
+        if (!user) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Usuário não encontrado' 
+            });
         }
 
-        // Se for o Anderson e ainda não for admin, atualiza para admin
-        if (username === 'Anderson' && user.role !== 'admin') {
-            user.role = 'admin';
-            await user.save();
+        // Verificar senha
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ 
+                success: false, 
+                message: 'Senha incorreta' 
+            });
         }
 
-        // Incluir o role no token JWT
+        // Gerar token JWT
         const token = jwt.sign(
             { 
-                userId: user._id, 
+                userId: user._id,
                 username: user.username,
                 role: user.role 
             }, 
@@ -182,14 +181,65 @@ app.post("/login", async (req, res) => {
             { expiresIn: '1h' }
         );
 
+        // Enviar resposta
         res.json({ 
             success: true, 
-            token, 
-            username: user.username, 
-            role: user.role 
+            token,
+            username: user.username,
+            role: user.role
         });
+
     } catch (error) {
         console.error('Erro no login:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno do servidor'
+        });
+    }
+});
+
+// Rota para criar usuário de teste (temporária)
+app.post("/api/auth/register", async (req, res) => {
+    try {
+        const { username, password, registrationCode } = req.body;
+
+        // Verificar código de registro
+        if (registrationCode !== VALID_REGISTRATION_CODE) {
+            return res.status(400).json({
+                success: false,
+                message: 'Código de registro inválido'
+            });
+        }
+
+        // Verificar se usuário já existe
+        const existingUser = await User.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'Usuário já existe'
+            });
+        }
+
+        // Criar hash da senha
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Criar novo usuário
+        const user = new User({
+            username,
+            password: hashedPassword,
+            role: username.toLowerCase() === 'admin' ? 'admin' : 'user'
+        });
+
+        await user.save();
+
+        res.json({
+            success: true,
+            message: 'Usuário criado com sucesso'
+        });
+
+    } catch (error) {
+        console.error('Erro ao criar usuário:', error);
         res.status(500).json({
             success: false,
             message: 'Erro interno do servidor'
@@ -574,6 +624,98 @@ app.get('/update-user-roles', async (req, res) => {
     }
 });
 
+// Rota para estatísticas do admin
+app.get('/api/admin/stats', authenticateToken, async (req, res) => {
+    try {
+        // Verifica se o usuário é admin
+        if (!req.user.role || req.user.role !== 'admin') {
+            return res.status(403).json({
+                success: false,
+                message: 'Acesso não autorizado'
+            });
+        }
+
+        // Total de usuários
+        const totalUsers = await User.countDocuments();
+
+        // Total de contatos
+        const totalContacts = await Contact.countDocuments();
+
+        // Contatos hoje
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const contactsToday = await Contact.countDocuments({
+            createdAt: { $gte: today }
+        });
+
+        // Dados para o gráfico (contatos por mês)
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+        sixMonthsAgo.setDate(1);
+        sixMonthsAgo.setHours(0, 0, 0, 0);
+
+        const contactsByMonth = await Contact.aggregate([
+            {
+                $match: {
+                    createdAt: { $gte: sixMonthsAgo }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        year: { $year: "$createdAt" },
+                        month: { $month: "$createdAt" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            {
+                $sort: {
+                    "_id.year": 1,
+                    "_id.month": 1
+                }
+            }
+        ]);
+
+        // Preparar dados do gráfico
+        const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        const chartData = {
+            labels: [],
+            data: []
+        };
+
+        // Preencher os últimos 6 meses
+        for (let i = 0; i < 6; i++) {
+            const date = new Date();
+            date.setMonth(date.getMonth() - (5 - i));
+            const monthIndex = date.getMonth();
+            const year = date.getFullYear();
+            
+            const monthData = contactsByMonth.find(item => 
+                item._id.year === year && item._id.month === (monthIndex + 1)
+            );
+
+            chartData.labels.push(months[monthIndex]);
+            chartData.data.push(monthData ? monthData.count : 0);
+        }
+
+        res.json({
+            success: true,
+            totalUsers,
+            totalContacts,
+            contactsToday,
+            chartData
+        });
+
+    } catch (error) {
+        console.error('Erro ao carregar estatísticas:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao carregar estatísticas'
+        });
+    }
+});
+
 // Rota para obter estatísticas do sistema (apenas admin)
 app.get('/api/admin/stats', authenticateToken, async (req, res) => {
     try {
@@ -704,6 +846,127 @@ app.get('/api/admin/contacts-by-user', authenticateToken, async (req, res) => {
             message: 'Erro ao obter estatísticas de contatos'
         });
     }
+});
+
+// Rota para obter perfil do usuário
+app.get('/api/user/profile', authenticateToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Usuário não encontrado'
+            });
+        }
+
+        res.json({
+            success: true,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+    } catch (error) {
+        console.error('Erro ao buscar perfil:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar perfil do usuário'
+        });
+    }
+});
+
+// Rota para verificar token
+app.get('/api/auth/verify', authenticateToken, (req, res) => {
+    try {
+        res.json({
+            success: true,
+            username: req.user.username,
+            role: req.user.role
+        });
+    } catch (error) {
+        console.error('Erro na verificação:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao verificar token'
+        });
+    }
+});
+
+let whatsappClient = null;
+(async () => {
+    try {
+        whatsappClient = new WhatsAppClient();
+        await whatsappClient.initialize();
+        console.log('Cliente WhatsApp inicializado com sucesso!');
+    } catch (error) {
+        console.error('Erro ao inicializar cliente WhatsApp:', error);
+    }
+})();
+
+// Rota para enviar mensagem WhatsApp
+app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
+    try {
+        const { contactId, message } = req.body;
+
+        if (!contactId || !message) {
+            return res.status(400).json({
+                success: false,
+                message: 'ID do contato e mensagem são obrigatórios'
+            });
+        }
+
+        // Buscar contato
+        const contact = await Contact.findById(contactId);
+        if (!contact) {
+            return res.status(404).json({
+                success: false,
+                message: 'Contato não encontrado'
+            });
+        }
+
+        // Enviar mensagem via WhatsApp
+        try {
+            await whatsappClient.sendMessage(contact.phone, message);
+            
+            // Atualizar status de mensagem do contato
+            contact.receivedMessage = true;
+            await contact.save();
+
+            res.json({
+                success: true,
+                message: 'Mensagem enviada com sucesso'
+            });
+        } catch (whatsappError) {
+            console.error('Erro ao enviar mensagem WhatsApp:', whatsappError);
+            res.status(500).json({
+                success: false,
+                message: 'Erro ao enviar mensagem via WhatsApp'
+            });
+        }
+    } catch (error) {
+        console.error('Erro ao processar envio:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro interno do servidor'
+        });
+    }
+});
+
+// Servir arquivos estáticos depois das rotas da API
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Error handling middleware por último
+app.use((err, req, res, next) => {
+    console.error('Erro no middleware:', err);
+    if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+        return res.status(400).json({
+            success: false,
+            message: 'Dados inválidos na requisição'
+        });
+    }
+    next();
 });
 
 // Serve o arquivo index.html para todas as rotas não encontradas

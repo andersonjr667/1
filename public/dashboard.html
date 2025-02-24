@@ -13,590 +13,289 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            min-height: 100vh;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
-            padding: 20px;
-            background: #4CAF50;
-            box-sizing: border-box;
-        }
-        .dashboard-header {
-            text-align: center;
-            margin-bottom: 2rem;
-            color: #1b5e20;
-            flex-shrink: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 0 10px;
-        }
-        .logo-container {
-            position: relative;
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        .logo-container img {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 100px;
-            z-index: 1;
-        }
-        @media screen and (max-width: 768px) {
-            .logo-container img {
-                position: static;
-                margin: 20px auto;
-                display: block;
-                width: 80px;
-            }
-            body {
-                padding: 10px;
-            }
-        }
-        @media (max-width: 480px) {
-            body {
-                padding: 5px;
-            }
-        }
-        .users-button {
-            background: #388E3C;
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin: 0.5rem;
-            max-width: 200px;
-        }
-
-        .users-button:hover {
-            background: #2E7D32;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
-
-        .users-button i {
-            font-size: 1.2rem;
-        }
-        .admin-buttons {
+            padding: 0;
+            min-height: 100vh;
+            background: linear-gradient(-45deg, #43a047, #66bb6a, #81c784, #4caf50);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-            margin: 1rem 0;
-        }
-
-        .admin-dashboard-button {
-            background: #1976D2;
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            margin: 0.5rem;
-            max-width: 200px;
+            position: relative;
         }
 
-        .admin-dashboard-button:hover {
-            background: #1565C0;
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        .logo {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 120px;
+            height: auto;
+            z-index: 10;
         }
 
-        .filter-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-family: 'Poppins', sans-serif;
-            font-weight: 500;
+        .dashboard-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            margin: 2rem auto;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeIn 0.5s ease;
+            position: relative;
+            top: 20px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .dashboard-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 5px;
-            transition: all 0.3s ease;
+            margin-bottom: 2rem;
         }
 
-        .filter-btn:hover {
-            background: #388E3C;
-            transform: translateY(-2px);
+        .dashboard-header h2 {
+            margin: 0;
+            color: #2e7d32;
+            font-size: 2.5rem;
         }
 
-        .filter-btn i {
-            font-size: 0.9rem;
-        }
-
-        .filter-group {
+        .user-info {
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: #666;
-            display: none;
-            background: #f8f9fa;
-            border-radius: 10px;
-            margin: 1rem 0;
+
+        .user-info span {
+            background: #f44336;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
         }
 
-        .empty-state i {
-            font-size: 3rem;
-            color: #4CAF50;
+        .admin-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .users-button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .users-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .users-button.primary {
+            background: #2e7d32;
+            color: white;
+        }
+
+        .users-button.secondary {
+            background: #1976d2;
+            color: white;
+        }
+
+        .filter-container {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        select {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            flex-grow: 1;
+        }
+
+        .ok-button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .ok-button:hover {
+            background: #43a047;
+        }
+
+        .contacts-header {
+            background: #f5f5f5;
+            padding: 1rem;
+            border-radius: 8px;
             margin-bottom: 1rem;
         }
 
-        .empty-state h3 {
+        .contact-card {
+            background: #fff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .contact-name {
             font-size: 1.2rem;
             margin-bottom: 0.5rem;
             color: #333;
         }
 
-        .empty-state p {
-            font-size: 1rem;
+        .contact-phone {
             color: #666;
-            margin: 0.5rem 0;
+            margin-bottom: 1rem;
         }
 
-        .empty-state-tip {
-            margin-top: 1rem;
+        .contact-status {
+            color: #666;
             font-style: italic;
-            color: #888;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 10px;
-            position: relative;
-            max-height: 70vh;
-            overflow-y: auto;
-        }
-        .users-list {
-            max-height: 400px;
-            overflow-y: auto;
-            margin-top: 1rem;
-        }
-        .user-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-        .user-item:last-child {
-            border-bottom: none;
-        }
-        .contact-info p {
-            margin: 5px 0;
-            color: #666;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .contact-info p i {
-            color: #4CAF50;
-            width: 16px;
-            text-align: center;
-        }
-        
-        .contact-info h3 {
-            margin: 0 0 10px;
-            color: #333;
+            margin-bottom: 1rem;
         }
 
-        /* Estilização da barra de rolagem */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #e8f5e9;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #4CAF50;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #388E3C;
-        }
-
-        .close {
-            position: absolute;
-            right: 15px;
-            top: 10px;
-            color: #666;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            width: 30px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: #f5f5f5;
-            transition: all 0.3s ease;
-        }
-
-        .close:hover {
-            background: #e0e0e0;
-            color: #333;
-        }
-
-        .contacts-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-top: 2rem;
-            padding: 0 1rem;
-        }
-
-        .contact-item {
-            background: #fff;
-            border-radius: 10px;
-            padding: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .contact-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .contact-info {
-            flex: 1;
-        }
-
-        .contact-info h3 {
-            margin: 0 0 0.5rem 0;
-            color: #333;
-            font-size: 1.2rem;
-        }
-
-        .contact-info p {
-            margin: 0.3rem 0;
-            color: #666;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .contact-info p i {
-            color: #4CAF50;
-            width: 20px;
-            text-align: center;
-        }
-
-        .contact-actions {
+        .button-group {
             display: flex;
             gap: 0.5rem;
         }
 
-        .contact-actions button {
-            background: none;
+        .action-button {
+            padding: 0.5rem 1rem;
             border: none;
-            padding: 0.5rem;
-            cursor: pointer;
             border-radius: 5px;
-            transition: background-color 0.2s ease;
-        }
-
-        .contact-actions .edit-btn {
-            color: #2196F3;
-        }
-
-        .contact-actions .delete-btn {
-            color: #f44336;
-        }
-
-        .contact-actions button:hover {
-            background-color: rgba(0,0,0,0.05);
-        }
-
-        @media (max-width: 768px) {
-            .contact-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .contact-actions {
-                width: 100%;
-                justify-content: flex-end;
-            }
-        }
-
-        .add-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 20px 0;
-            font-size: 1rem;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
         }
 
-        .add-btn:hover {
-            background: #388E3C;
-            transform: translateY(-2px);
+        .send-button {
+            background: #4caf50;
+            color: white;
         }
 
-        .add-btn i {
-            font-size: 1.1rem;
+        .send-button:hover {
+            background: #43a047;
         }
 
-        @media (max-width: 768px) {
-            .add-btn {
-                width: 100%;
-                justify-content: center;
-            }
+        .edit-button {
+            background: #2196f3;
+            color: white;
         }
 
-        /* Estilos específicos para mobile */
-        @media (max-width: 768px) {
-            .contact-list {
-                grid-template-columns: 1fr;
-            }
+        .edit-button:hover {
+            background: #1e88e5;
+        }
 
-            .contact-card {
-                margin: 10px 0;
-            }
+        .delete-button {
+            background: #f44336;
+            color: white;
+        }
 
-            .filter-section {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-
-            .filter-section select,
-            .filter-section input {
-                width: 100%;
-            }
-
-            .admin-buttons {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .users-button,
-            .admin-dashboard-button {
-                width: 100%;
-                margin: 5px 0;
-            }
-
-            .contact-details {
-                padding: 10px;
-            }
-
-            .contact-header {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .contact-actions {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .contact-actions button {
-                width: 100%;
-                margin: 5px 0;
-            }
-
-            .modal-content {
-                width: 90%;
-                margin: 20px auto;
-                padding: 15px;
-            }
-
-            .form-group {
-                margin-bottom: 15px;
-            }
-
-            .form-group label {
-                margin-bottom: 5px;
-            }
-
-            .form-group input,
-            .form-group select {
-                width: 100%;
-            }
+        .delete-button:hover {
+            background: #e53935;
         }
 
         @media (max-width: 768px) {
-            .dashboard-header {
-                margin-bottom: 1rem;
-            }
-
-            .dashboard-header h1 {
-                font-size: 1.8rem;
-            }
-
-            .contact-list {
-                grid-template-columns: 1fr;
-                gap: 15px;
-                padding: 10px;
-            }
-
-            .contact-card {
-                padding: 15px;
-            }
-
-            .contact-actions {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .contact-actions button {
-                width: 100%;
-                padding: 8px;
-                font-size: 14px;
-            }
-
-            .admin-buttons {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.5rem;
-                margin: 0.5rem 0;
-            }
-
-            .admin-dashboard-button,
-            .users-button {
-                max-width: none;
-                width: 100%;
-                margin: 0.25rem 0;
-                padding: 12px;
-                font-size: 14px;
-            }
-
-            .modal-content {
-                width: 90%;
-                padding: 15px;
-            }
-
-            .modal input,
-            .modal select {
-                padding: 10px;
-                font-size: 14px;
-            }
-
-            .filter-section {
-                flex-direction: column;
-                gap: 10px;
-            }
-
-            .filter-section input,
-            .filter-section select {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .dashboard-header h1 {
-                font-size: 1.5rem;
-            }
-
-            .contact-card {
-                padding: 12px;
-            }
-
-            .contact-info h3 {
-                font-size: 16px;
-            }
-
-            .contact-info p {
-                font-size: 14px;
-            }
-
-            .timestamp {
-                font-size: 12px;
-                color: #666;
-                margin-top: 5px;
-            }
-
-            .notification {
+            .logo {
+                width: 80px;
+                top: 10px;
                 left: 10px;
-                right: 10px;
-                bottom: 10px;
-                width: auto;
-                font-size: 14px;
-            }
-        }
-
-        /* Melhorias para touch devices */
-        @media (hover: none) {
-            .contact-actions button:active,
-            .admin-dashboard-button:active,
-            .users-button:active {
-                transform: scale(0.98);
-                opacity: 0.9;
             }
 
-            .contact-card {
-                transition: none;
+            .dashboard-container {
+                width: 95%;
+                padding: 1rem;
+                margin: 1rem;
+                top: 10px;
             }
 
-            .contact-card:active {
-                transform: translateY(-2px);
+            .dashboard-header h2 {
+                font-size: 2rem;
+            }
+
+            .admin-buttons {
+                flex-direction: column;
+            }
+
+            .users-button {
+                width: 100%;
+            }
+
+            .filter-container {
+                flex-direction: column;
+            }
+
+            select {
+                width: 100%;
+            }
+
+            .ok-button {
+                width: 100%;
             }
         }
     </style>
 </head>
 <body>
     <div class="logo-container">
-        <img src="images/image2.png" alt="Logo">
+        <img src="images/image2.png" alt="Logo" class="logo">
     </div>
     <div class="dashboard-container">
         <div class="dashboard-header">
             <h2>Dashboard</h2>
             <p>Gerencie seus contatos</p>
-            <div class="admin-buttons" style="display: none;" id="admin-buttons">
+            <div class="user-info">
+                <span id="user-name"></span>
+                <span id="user-role"></span>
+            </div>
+            <!-- Botões de admin em um container separado -->
+            <div id="admin-buttons" class="admin-buttons" style="display: none;">
                 <button class="users-button" onclick="window.location.href='users.html'">
                     <i class="fas fa-users"></i>
                     Gerenciar Usuários
                 </button>
-                <button class="admin-dashboard-button" onclick="window.location.href='admin-dashboard.html'">
+                <button class="users-button" onclick="window.location.href='admin-dashboard.html'">
                     <i class="fas fa-user-shield"></i>
                     Dashboard Admin
                 </button>
@@ -619,7 +318,7 @@
             </div>
 
             <!-- Botão de Adicionar Contato -->
-            <button id="add-contact-btn" onclick="showAddContactModal()" class="add-btn">
+            <button id="add-contact-btn" onclick="showAddContactModal()" class="users-button">
                 <i class="fas fa-plus"></i> Adicionar Contato
             </button>
 
@@ -643,13 +342,15 @@
                             <label for="birthday">Data de Aniversário: (opcional)</label>
                             <input type="date" id="birthday" name="birthday">
                         </div>
-                        <button type="submit" class="submit-btn">Salvar</button>
+                        <button type="submit" class="users-button">
+                            <i class="fas fa-save"></i> Salvar
+                        </button>
                     </form>
                 </div>
             </div>
 
             <!-- Área de Filtros e Busca -->
-            <div class="filters-section">
+            <div class="filter-container">
                 <div class="filter-group">
                     <select id="month-filter">
                         <option value="all">Todos os Meses</option>
@@ -666,7 +367,7 @@
                         <option value="11">Novembro</option>
                         <option value="12">Dezembro</option>
                     </select>
-                    <button onclick="filterContacts()" class="filter-btn">
+                    <button onclick="filterContacts()" class="ok-button">
                         <i class="fas fa-check"></i> OK
                     </button>
                 </div>
@@ -712,7 +413,7 @@
                     <label for="edit-birthday">Data de Aniversário:</label>
                     <input type="date" id="edit-birthday" required>
                 </div>
-                <button type="submit" class="btn btn-primary">
+                <button type="submit" class="users-button">
                     <i class="fas fa-save"></i> Salvar Alterações
                 </button>
             </form>
@@ -749,26 +450,66 @@
 
         // Função para mostrar notificações
         function showNotification(message, isError = false) {
-            const notification = document.createElement('div');
-            notification.className = `notification ${isError ? 'error' : 'success'}`;
-            notification.style.position = 'fixed';
-            notification.style.top = '20px';
-            notification.style.right = '20px';
-            notification.style.padding = '15px 25px';
-            notification.style.borderRadius = '5px';
-            notification.style.backgroundColor = isError ? '#ff5252' : '#4CAF50';
-            notification.style.color = 'white';
-            notification.style.zIndex = '1000';
-            notification.textContent = message;
-
-            document.body.appendChild(notification);
-
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+            
+            notification.className = 'notification ' + (isError ? 'error' : 'success');
+            notificationMessage.textContent = message;
+            
+            // Remove show class if it exists
+            notification.classList.remove('show');
+            
+            // Force reflow
+            void notification.offsetWidth;
+            
+            // Add show class and display
+            notification.style.display = 'flex';
             setTimeout(() => {
-                notification.remove();
-            }, 5000);
+                notification.classList.add('show');
+            }, 10);
+
+            // Hide notification after delay
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 300);
+            }, 3000);
         }
 
-        // Criar contato
+        // Função para verificar autenticação
+        async function checkAuth() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            try {
+                const response = await fetch('/api/auth/verify', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Token inválido');
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Erro na verificação:', error);
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('role');
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+
+        // Função para criar contato
         async function addContact(event) {
             event.preventDefault();
             
@@ -783,7 +524,7 @@
 
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                     return;
                 }
 
@@ -809,7 +550,7 @@
                     throw new Error(data.message || 'Erro ao criar contato');
                 }
 
-                showNotification('Contato criado com sucesso!');
+                showNotification('✅ Contato criado com sucesso!');
                 
                 const form = document.getElementById('contact-form');
                 if (form) {
@@ -829,7 +570,7 @@
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                showNotification(error.message || 'Erro ao criar contato', true);
+                showNotification('❌ ' + (error.message || 'Erro ao criar contato'), true);
             }
             
             return false;
@@ -840,7 +581,7 @@
             if (response.status === 401 || response.status === 403) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('username');
-                window.location.href = 'index.html';
+                window.location.href = 'login.html';
                 return false;
             }
             return true;
@@ -874,7 +615,7 @@
 
             } catch (error) {
                 console.error('Erro:', error);
-                showNotification('Erro ao carregar dados do contato', true);
+                showNotification('❌ Erro ao carregar dados do contato', true);
             }
         }
 
@@ -903,13 +644,13 @@
                     throw new Error('Erro ao atualizar contato');
                 }
 
-                showNotification('Contato atualizado com sucesso!');
+                showNotification('✅ Contato atualizado com sucesso!');
                 closeEditModal();
                 await loadContacts(); // Recarrega a lista de contatos
 
             } catch (error) {
                 console.error('Erro:', error);
-                showNotification('Erro ao atualizar contato', true);
+                showNotification('❌ Erro ao atualizar contato', true);
             }
         }
 
@@ -927,7 +668,7 @@
 
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    window.location.href = 'index.html';
+                    window.location.href = 'login.html';
                     return;
                 }
 
@@ -947,7 +688,7 @@
                     throw new Error(data.message || 'Erro ao deletar contato');
                 }
 
-                showNotification('Contato deletado com sucesso!');
+                showNotification('✅ Contato deletado com sucesso!');
                 
                 // Recarrega a lista de contatos
                 const monthFilter = document.getElementById('month-filter').value;
@@ -958,21 +699,42 @@
                 }
             } catch (error) {
                 console.error('Erro:', error);
-                showNotification(error.message || 'Erro ao deletar contato', true);
+                showNotification('❌ ' + (error.message || 'Erro ao deletar contato'), true);
             }
+        }
+
+        // Função para exibir os contatos
+        function displayContacts(data) {
+            const contactsList = document.getElementById('contacts-list');
+            const emptyState = document.getElementById('empty-state');
+
+            // Limpa a lista atual
+            while (contactsList.firstChild) {
+                if (contactsList.firstChild.id === 'empty-state') {
+                    break;
+                }
+                contactsList.removeChild(contactsList.firstChild);
+            }
+
+            if (!data.contacts || data.contacts.length === 0) {
+                emptyState.style.display = 'block';
+                document.getElementById('empty-month').textContent = 'todos os meses';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+
+            // Renderiza os contatos
+            data.contacts.forEach(contact => {
+                const contactElement = createContactElement(contact);
+                contactsList.insertBefore(contactElement, emptyState);
+            });
         }
 
         // Função para carregar todos os contatos
         async function loadContacts() {
             try {
                 const token = localStorage.getItem('token');
-                if (!token) {
-                    console.log('Token não encontrado');
-                    window.location.href = 'index.html';
-                    return;
-                }
-
-                console.log('Fazendo requisição para /api/contacts');
                 const response = await fetch('/api/contacts', {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -980,52 +742,13 @@
                 });
 
                 if (!response.ok) {
-                    console.error('Resposta não ok:', response.status, response.statusText);
                     throw new Error('Erro ao carregar contatos');
                 }
 
                 const data = await response.json();
-                console.log('Dados recebidos:', data);
-
-                const contactsList = document.getElementById('contacts-list');
-                const emptyState = document.getElementById('empty-state');
-
-                console.log('Lista de contatos encontrada:', contactsList);
-                console.log('Estado vazio encontrado:', emptyState);
-
-                // Limpa a lista atual
-                while (contactsList.firstChild) {
-                    if (contactsList.firstChild.id === 'empty-state') {
-                        break;
-                    }
-                    contactsList.removeChild(contactsList.firstChild);
-                }
-
-                if (!data.contacts || data.contacts.length === 0) {
-                    console.log('Nenhum contato encontrado');
-                    emptyState.style.display = 'block';
-                    document.getElementById('empty-month').textContent = 'todos os meses';
-                    return;
-                }
-
-                console.log('Número de contatos:', data.contacts.length);
-                emptyState.style.display = 'none';
-
-                // Renderiza os contatos
-                data.contacts.forEach((contact, index) => {
-                    console.log(`Criando elemento para contato ${index}:`, contact);
-                    const contactElement = createContactElement(contact);
-                    contactsList.insertBefore(contactElement, emptyState);
-                });
-
-                // Atualiza o texto do mês selecionado
-                const selectedMonth = document.getElementById('selected-month');
-                if (selectedMonth) {
-                    selectedMonth.textContent = 'Todos';
-                }
-
+                displayContacts(data);
             } catch (error) {
-                console.error('Erro detalhado:', error);
+                console.error('Erro ao carregar contatos:', error);
                 showNotification('Erro ao carregar contatos', true);
             }
         }
@@ -1034,11 +757,6 @@
         async function loadMonthContacts(month) {
             try {
                 const token = localStorage.getItem('token');
-                if (!token) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-
                 const response = await fetch(`/api/contacts/month/${month}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1083,31 +801,40 @@
 
             } catch (error) {
                 console.error('Erro:', error);
-                showNotification('Erro ao carregar contatos', true);
+                showNotification('❌ Erro ao carregar contatos', true);
             }
         }
 
         // Função para criar elemento de contato
         function createContactElement(contact) {
             const contactElement = document.createElement('div');
-            contactElement.className = 'contact-item';
+            contactElement.className = 'contact-card';
             
-            const timestamp = new Date(contact.timestamp);
+            // Formata a data usando a data de criação
+            const timestamp = new Date(contact.createdAt || Date.now());
             const formattedDate = timestamp.toLocaleDateString('pt-BR');
             const formattedTime = timestamp.toLocaleTimeString('pt-BR');
+
+            // Status da mensagem
+            const messageStatus = contact.receivedMessage ? 
+                '<p class="message-received"><i class="fas fa-check-circle"></i> Mensagem enviada</p>' : 
+                '<p class="message-pending"><i class="fas fa-clock"></i> Aguardando envio</p>';
 
             contactElement.innerHTML = `
                 <div class="contact-info">
                     <h3>${contact.name}</h3>
-                    <p><i class="fas fa-envelope"></i> ${contact.email}</p>
                     <p><i class="fas fa-phone"></i> ${contact.phone}</p>
+                    ${messageStatus}
                     <p class="timestamp"><i class="far fa-clock"></i> ${formattedDate} ${formattedTime}</p>
                 </div>
-                <div class="contact-actions">
-                    <button onclick="editContact('${contact._id}')" class="edit-btn">
+                <div class="button-group">
+                    <button onclick="sendWhatsAppMessage('${contact.phone}', '${contact.name}', '${contact._id}')" class="action-button send-button ${contact.receivedMessage ? 'resend' : ''}">
+                        <i class="fab fa-whatsapp"></i> ${contact.receivedMessage ? 'Reenviar Mensagem' : 'Enviar Mensagem'}
+                    </button>
+                    <button onclick="editContact('${contact._id}')" class="action-button edit-button">
                         <i class="fas fa-edit"></i> Editar
                     </button>
-                    <button onclick="deleteContact('${contact._id}')" class="delete-btn">
+                    <button onclick="deleteContact('${contact._id}')" class="action-button delete-button">
                         <i class="fas fa-trash-alt"></i> Excluir
                     </button>
                 </div>
@@ -1115,11 +842,102 @@
             return contactElement;
         }
 
+        // Função para enviar mensagem WhatsApp
+        async function sendWhatsAppMessage(phone, name, contactId) {
+            try {
+                const cleanPhone = phone.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+                
+                // Determina a saudação com base na hora
+                const hora = new Date().getHours();
+                let saudacao;
+                if (hora >= 5 && hora < 12) {
+                    saudacao = "Bom dia";
+                } else if (hora >= 12 && hora < 18) {
+                    saudacao = "Boa tarde";
+                } else {
+                    saudacao = "Boa noite";
+                }
+
+                const message = `${saudacao}, ${name}! Graça e Paz do Senhor Jesus!\n\n` +
+                    "Seja muito bem-vindo(a) à Igreja Batista Solidária! A Juventude da Igreja Batista Solidária (JIBS) também celebra a sua chegada e se alegra em recebê-lo(a). " +
+                    "É uma honra tê-lo(a) conosco e agradecemos por compartilhar seu contato.\n\n" +
+                    "Que este momento seja especial em sua vida e que você se sinta acolhido(a) e abençoado(a) por Deus. " +
+                    "Estamos aqui para caminhar ao seu lado e auxiliar no que for preciso.\n\n" +
+                    "Que o Senhor renove sua paz, sua alegria e sua esperança hoje e sempre!\n\n" +
+                    "Com carinho,\nJuventude da Igreja Batista Solidária (JIBS) e Igreja Batista Solidária";
+                
+                const response = await fetch('/api/send-whatsapp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        phone: cleanPhone,
+                        message: message,
+                        contactId: contactId
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('✅ Mensagem enviada com sucesso!');
+                    // Recarrega a lista de contatos para atualizar o status
+                    await loadContacts();
+                } else {
+                    showNotification('❌ ' + (data.message || 'Erro ao enviar mensagem'), true);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showNotification('❌ Erro ao enviar mensagem', true);
+            }
+        }
+
+        // Função para reenviar mensagem
+        async function resendMessage(contactId, name) {
+            try {
+                const token = localStorage.getItem('token');
+                
+                // Formatação da mensagem com emojis e melhor espaçamento
+                const message = `🕊️ *Graça e Paz!* ${name}\n\n` +
+                    `Esperamos que sua semana esteja sendo abençoada! ✨\n` +
+                    `Queremos lembrar que você não está sozinho(a) nessa caminhada. Deus tem cuidado de cada detalhe da sua vida! 🙏\n\n` +
+                    `_"Os que esperam no Senhor renovarão as suas forças, subirão com asas como águias; correrão, e não se cansarão; caminharão, e não se fatigarão."_\n` +
+                    `📖 *Isaías 40:31*\n\n` +
+                    `Se precisar de algo, quiser compartilhar um pedido de oração ou simplesmente conversar, estamos aqui para você! 💝\n\n` +
+                    `Que o Senhor renove suas forças, encha seu coração de alegria e guie cada passo seu.\n` +
+                    `Tenha uma semana cheia da presença de Deus! ✨🙌`;
+
+                const response = await fetch('/api/send-whatsapp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        contactId,
+                        message
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('✅ Mensagem enviada com sucesso!');
+                } else {
+                    throw new Error(data.message || 'Erro ao enviar mensagem');
+                }
+            } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+                showNotification('❌ Erro ao enviar mensagem', true);
+            }
+        }
+
         // Função para logout
         function logout() {
             localStorage.removeItem('token');
-            localStorage.removeItem('username');
-            window.location.href = 'index.html';
+            window.location.replace('login.html');
         }
 
         // Funções do Modal
@@ -1150,30 +968,47 @@
             }
         }
 
+        // Função para verificar se o usuário é admin
+        async function checkAdminAccess() {
+            try {
+                const role = localStorage.getItem('role');
+                const isAdmin = role === 'admin';
+                
+                // Mostrar/ocultar botões de admin
+                document.querySelectorAll('.admin-only').forEach(element => {
+                    element.style.display = isAdmin ? '' : 'none';
+                });
+
+                // Mostrar/ocultar botões do dashboard admin
+                const adminButtons = document.getElementById('admin-buttons');
+                if (adminButtons) {
+                    adminButtons.style.display = isAdmin ? 'flex' : 'none';
+                }
+
+                return isAdmin;
+            } catch (error) {
+                console.error('Erro ao verificar acesso admin:', error);
+                return false;
+            }
+        }
+
         // Inicializa a página
         window.addEventListener('load', async () => {
-            if (!localStorage.getItem('token')) {
-                window.location.href = 'index.html';
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
                 return;
             }
-            
+
             // Atualiza o nome do usuário
             const username = localStorage.getItem('username');
             if (username) {
                 document.getElementById('username-display').textContent = username;
             }
 
-            // Verifica se o usuário é admin e mostra/esconde os botões administrativos
-            const userRole = localStorage.getItem('role');
-            const adminButtons = document.getElementById('admin-buttons');
-            if (userRole === 'admin') {
-                adminButtons.style.display = 'flex';
-            } else {
-                adminButtons.style.display = 'none';
-            }
-
-            // Carrega os contatos iniciais
+            // Carrega os contatos e verifica acesso admin
             await loadContacts();
+            await checkAdminAccess();
         });
     </script>
 </body>

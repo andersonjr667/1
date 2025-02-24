@@ -1,4 +1,4 @@
 git status
 git add .  
-git commit -m "Conteudo do commit"
+git commit -m "Melhorias: Login com username, correções no dashboard e novo template de mensagem WhatsApp"
 git push origin main

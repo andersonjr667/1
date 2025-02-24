@@ -90,4 +90,49 @@ O sistema é totalmente responsivo e funciona em:
 ## 📄 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## Módulo WhatsApp
+
+Este projeto inclui um módulo para envio de mensagens via WhatsApp usando a biblioteca Baileys. O módulo permite:
+
+- Autenticação via QR Code
+- Armazenamento automático de credenciais
+- Reconexão automática em caso de desconexão
+- Envio de mensagens de texto
+
+### Como usar o módulo WhatsApp
+
+1. Primeiro, certifique-se de que todas as dependências estão instaladas:
+```bash
+npm install
+```
+
+2. Para testar o envio de mensagens, use o arquivo de exemplo:
+```bash
+node example-whatsapp.js
+```
+
+3. Quando executar pela primeira vez, um QR Code será exibido no terminal. Escaneie-o com seu WhatsApp para autenticar.
+
+4. Para enviar mensagens em seu próprio código:
+```javascript
+const WhatsAppClient = require('./whatsapp');
+
+async function sendMessage() {
+    const whatsapp = new WhatsAppClient();
+    await whatsapp.initialize();
+    
+    // Aguarde a conexão ser estabelecida
+    // O número deve estar no formato internacional sem o '+'
+    await whatsapp.sendMessage('5511999999999', 'Sua mensagem aqui');
+}
+```
+
+### Notas importantes
+
+- As credenciais são salvas automaticamente na pasta `whatsapp-auth`
+- O número de telefone deve estar no formato internacional sem o '+' (exemplo: 5511999999999)
+- A reconexão automática tentará reconectar até 5 vezes em caso de desconexão
+- Não é necessário escanear o QR Code novamente após a primeira autenticação
+
 # 1

@@ -201,6 +201,47 @@
             margin: 0 auto;
         }
 
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            font-size: 1.1em;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            opacity: 0;
+            pointer-events: none;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .notification.success {
+            border-left: 5px solid #4CAF50;
+        }
+
+        .notification.error {
+            border-left: 5px solid #f44336;
+        }
+
+        .notification.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .notification i {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 10px;
@@ -440,13 +481,46 @@
         </div>
     </div>
 
+    <div id="notification" class="notification">
+        <span id="notification-message"></span>
+    </div>
+
     <script>
+        // Função para mostrar notificação
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            const notificationMessage = document.getElementById('notification-message');
+            
+            notification.className = 'notification ' + (isError ? 'error' : 'success');
+            notificationMessage.textContent = message;
+            
+            // Remove show class if it exists
+            notification.classList.remove('show');
+            
+            // Force reflow
+            void notification.offsetWidth;
+            
+            // Add show class and display
+            notification.style.display = 'flex';
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+
+            // Hide notification after delay
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    notification.style.display = 'none';
+                }, 300);
+            }, 3000);
+        }
+
         // Carregar estatísticas
         async function loadStats() {
             try {
                 const token = localStorage.getItem('token');
                 if (!token) {
-                    window.location.href = 'admin.html';
+                    window.location.href = 'login.html';
                     return;
                 }
 
@@ -457,10 +531,15 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Falha ao carregar estatísticas');
+                    const data = await response.json();
+                    throw new Error(data.message || 'Falha ao carregar estatísticas');
                 }
 
                 const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.message || 'Falha ao carregar estatísticas');
+                }
 
                 // Atualiza os números
                 document.getElementById('total-users').textContent = data.totalUsers;
@@ -477,9 +556,11 @@
 
                 // Carrega e exibe os últimos contatos
                 await loadRecentContacts();
+
+                showNotification('✅ Estatísticas carregadas com sucesso!');
             } catch (error) {
                 console.error('Erro ao carregar estatísticas:', error);
-                alert('Erro ao carregar estatísticas. Por favor, tente novamente.');
+                showNotification('❌ ' + (error.message || 'Erro ao carregar estatísticas'), true);
             }
         }
 
@@ -588,26 +669,22 @@
             }
         }
 
-        // Carrega as estatísticas quando a página carregar
-        window.addEventListener('load', () => {
-            // Verifica se o usuário está logado e é admin
+        // Verificar autenticação
+        window.addEventListener('load', async () => {
             const token = localStorage.getItem('token');
-            const role = localStorage.getItem('role');
-            
-            if (!token || role !== 'admin') {
-                window.location.href = 'index.html';
+            if (!token) {
+                window.location.replace('login.html');
                 return;
             }
 
-            loadStats();
+            // Carregar estatísticas
+            await loadStats();
         });
 
         // Função de logout
         function logout() {
             localStorage.removeItem('token');
-            localStorage.removeItem('username');
-            localStorage.removeItem('role');
-            window.location.href = 'index.html';
+            window.location.replace('login.html');
         }
     </script>
 </body>
