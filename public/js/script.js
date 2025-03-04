@@ -47,36 +47,20 @@ async function login() {
             body: JSON.stringify({ username, password })
         });
 
-        const data = await response.json();
+        console.log("Resposta do servidor:", response); // Log da resposta
 
-        if (!response.ok || !data.success) {
-            showMessage(data.message || "Erro desconhecido durante o login", true);
-            return;
-        }
-
-        // Salva o token e username
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("username", data.username);
-        localStorage.setItem("role", data.role);
-
-        showMessage("Login realizado com sucesso!", false);
-        
-        if (data.role === 'admin') {
-            // Mostrar funcionalidade de gerenciar usuários
-            document.getElementById('manage-users-link').style.display = 'block';
+        if (response.ok) {
+            const data = await response.json();
+            // Lógica para redirecionar ou armazenar token
+            localStorage.setItem('token', data.token); // Armazenar token se necessário
+            window.location.href = 'admin-dashboard.html'; // Redirecionar para o dashboard
         } else {
-            // Esconder funcionalidade de gerenciar usuários
-            document.getElementById('manage-users-link').style.display = 'none';
+            const error = await response.json();
+            showMessage(error.message || "Erro ao fazer login.", true);
         }
-
-        // Redireciona para o dashboard
-        setTimeout(() => {
-            window.location.href = "dashboard.html";
-        }, 1000);
-
     } catch (error) {
-        console.error('Erro no login:', error);
-        showMessage("Erro no login. Tente novamente.", true);
+        console.error("Erro:", error);
+        showMessage("Erro ao fazer login.", true);
     } finally {
         const button = document.querySelector(".login-box button");
         if (button) {

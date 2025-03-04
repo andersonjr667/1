@@ -1,4 +1,4 @@
 git status
 git add .  
-git commit -m "Melhorias: Login com username, correções no dashboard e novo template de mensagem WhatsApp"
+git commit -m "Melhorias gerais em todas as pagina"
 git push origin main

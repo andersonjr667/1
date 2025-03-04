@@ -126,7 +126,7 @@ const authenticateToken = (req, res, next) => {
             message: 'Erro interno do servidor'
         });
     }
-};
+}; // Fechamento da função authenticateToken
 
 // Função para verificar se é admin
 async function isAdmin(username) {
@@ -895,15 +895,26 @@ app.get('/api/auth/verify', authenticateToken, (req, res) => {
 });
 
 let whatsappClient = null;
-(async () => {
+let isInitializing = false;
+
+async function initializeWhatsApp() {
+    if (isInitializing) return;
+    
     try {
+        isInitializing = true;
         whatsappClient = new WhatsAppClient();
         await whatsappClient.initialize();
         console.log('Cliente WhatsApp inicializado com sucesso!');
     } catch (error) {
         console.error('Erro ao inicializar cliente WhatsApp:', error);
+        whatsappClient = null;
+    } finally {
+        isInitializing = false;
     }
-})();
+}
+
+// Inicializa o WhatsApp quando o servidor inicia
+initializeWhatsApp();
 
 // Rota para enviar mensagem WhatsApp
 app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
@@ -917,6 +928,19 @@ app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
             });
         }
 
+        // Verifica se o cliente WhatsApp está inicializado
+        if (!whatsappClient || !whatsappClient.isConnected) {
+            console.log('Cliente WhatsApp não está conectado. Tentando reinicializar...');
+            await initializeWhatsApp();
+            
+            if (!whatsappClient || !whatsappClient.isConnected) {
+                return res.status(503).json({
+                    success: false,
+                    message: 'Serviço do WhatsApp não está disponível no momento'
+                });
+            }
+        }
+
         // Buscar contato
         const contact = await Contact.findById(contactId);
         if (!contact) {
@@ -928,7 +952,10 @@ app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
 
         // Enviar mensagem via WhatsApp
         try {
-            await whatsappClient.sendMessage(contact.phone, message);
+            const cleanPhone = contact.phone.replace(/\D/g, '');
+            console.log('Tentando enviar mensagem para:', cleanPhone);
+            
+            await whatsappClient.sendMessage(cleanPhone, message);
             
             // Atualizar status de mensagem do contato
             contact.receivedMessage = true;
@@ -942,14 +969,14 @@ app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
             console.error('Erro ao enviar mensagem WhatsApp:', whatsappError);
             res.status(500).json({
                 success: false,
-                message: 'Erro ao enviar mensagem via WhatsApp'
+                message: 'Erro ao enviar mensagem via WhatsApp: ' + whatsappError.message
             });
         }
     } catch (error) {
         console.error('Erro ao processar envio:', error);
         res.status(500).json({
             success: false,
-            message: 'Erro interno do servidor'
+            message: 'Erro interno do servidor: ' + error.message
         });
     }
 });
