@@ -425,6 +425,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editForm) {
         editForm.addEventListener('submit', updateContact);
     }
+
+    // Remova qualquer chamada automática para abrir o modal
+    // Exemplo: document.getElementById('myModal').style.display = 'block';
+
+    // Adicione um evento de clique para abrir o modal
+    document.getElementById('openModalButton').addEventListener('click', function() {
+        document.getElementById('myModal').style.display = 'block';
+    });
+
+    // Adicione um evento de clique para fechar o modal
+    document.getElementById('closeModalButton').addEventListener('click', function() {
+        document.getElementById('myModal').style.display = 'none';
+    });
 });
 
 // Função para adicionar usuário

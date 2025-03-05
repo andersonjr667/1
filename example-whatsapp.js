@@ -12,6 +12,11 @@ async function example() {
         // Aguardar a conexão ser estabelecida
         console.log('Aguarde o QR Code aparecer no terminal e escaneie-o com seu WhatsApp');
         
+        // Verificar se o cliente está conectado
+        whatsapp.on('ready', () => {
+            console.log('Cliente WhatsApp conectado com sucesso!');
+        });
+
         // Exemplo de como enviar uma mensagem
         // Você pode descomentar estas linhas e substituir com um número real quando quiser testar
         /*

@@ -115,6 +115,37 @@ const contactSchema = new mongoose.Schema({
     }
 });
 
+// Add this after your other mongoose schemas
+
+const memberSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    phone: {
+        type: String,
+        required: true
+    },
+    birthday: {
+        type: Date,
+        required: true
+    },
+    isDisciple: {
+        type: Boolean,
+        default: false
+    },
+    discipleBy: {
+        type: String,
+        default: null
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
+const Member = mongoose.model('Member', memberSchema, 'members');
+
 const User = mongoose.model('User', userSchema, 'users');
 const Contact = mongoose.model('Contact', contactSchema, 'contacts');
 
@@ -984,6 +1015,47 @@ app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
             success: false,
             message: 'Internal server error: ' + error.message
         });
+    }
+});
+
+// Add these routes after your other routes
+
+// Get all members
+app.get('/api/members', authenticateToken, async (req, res) => {
+    try {
+        const members = await Member.find().sort({ name: 1 });
+        res.json(members);
+    } catch (error) {
+        console.error('Erro ao listar membros:', error);
+        res.status(500).json({ message: 'Erro ao listar membros' });
+    }
+});
+
+// Add new member
+app.post('/api/members', authenticateToken, async (req, res) => {
+    try {
+        const member = new Member(req.body);
+        await member.save();
+        res.status(201).json(member);
+    } catch (error) {
+        console.error('Erro ao criar membro:', error);
+        res.status(500).json({ message: 'Erro ao criar membro' });
+    }
+});
+
+// Toggle disciple status
+app.put('/api/members/:id/toggle-disciple', authenticateToken, async (req, res) => {
+    try {
+        const member = await Member.findById(req.params.id);
+        if (!member) return res.status(404).json({ message: 'Membro não encontrado' });
+
+        member.isDisciple = !member.isDisciple;
+        member.discipleBy = member.isDisciple ? req.user.username : null;
+        await member.save();
+        res.json(member);
+    } catch (error) {
+        console.error('Erro ao atualizar status:', error);
+        res.status(500).json({ message: 'Erro ao atualizar status' });
     }
 });
 

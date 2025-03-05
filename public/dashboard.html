@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles/common.css">
+    <link rel="stylesheet" href="styles/shared.css">
     <link rel="stylesheet" href="styles/dashboard.css">
     <style>
         /* Adicione esta seção para a imagem do dashboard */
@@ -262,6 +263,25 @@
                 width: 100%;
             }
         }
+
+        .message-received .resent-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+
+        .action-button.send-button.resent {
+            background: #888;
+            cursor: not-allowed;
+        }
+
+        .action-button.send-button.resent:hover {
+            background: #888;
+            transform: none;
+        }
     </style>
 </head>
 <body class="dashboard">
@@ -285,6 +305,10 @@
                 <button class="users-button" onclick="window.location.href='admin-dashboard.html'">
                     <i class="fas fa-user-shield"></i>
                     Dashboard Admin
+                </button>
+                <button class="users-button" onclick="window.location.href='members.html'">
+                    <i class="fas fa-user-friends"></i>
+                    Gerenciar Membros
                 </button>
             </div>
         </div>
@@ -797,14 +821,16 @@
             const contactElement = document.createElement('div');
             contactElement.className = 'contact-card';
             
-            // Formata a data usando a data de criação
             const timestamp = new Date(contact.createdAt || Date.now());
             const formattedDate = timestamp.toLocaleDateString('pt-BR');
             const formattedTime = timestamp.toLocaleTimeString('pt-BR');
 
-            // Status da mensagem
+            // Updated message status to include resend state
             const messageStatus = contact.receivedMessage ? 
-                '<p class="message-received"><i class="fas fa-check-circle"></i> Mensagem enviada</p>' : 
+                `<p class="message-received">
+                    <i class="fas fa-check-circle"></i> Mensagem enviada
+                    ${contact.messageResent ? '<span class="resent-badge"><i class="fas fa-sync-alt"></i> Reenviada</span>' : ''}
+                </p>` : 
                 '<p class="message-pending"><i class="fas fa-clock"></i> Aguardando envio</p>';
 
             contactElement.innerHTML = `
@@ -815,8 +841,11 @@
                     <p class="timestamp"><i class="far fa-clock"></i> ${formattedDate} ${formattedTime}</p>
                 </div>
                 <div class="button-group">
-                    <button onclick="sendWhatsAppMessage('${contact.phone}', '${contact.name}', '${contact._id}')" class="action-button send-button ${contact.receivedMessage ? 'resend' : ''}">
-                        <i class="fab fa-whatsapp"></i> ${contact.receivedMessage ? 'Reenviar Mensagem' : 'Enviar Mensagem'}
+                    <button onclick="sendFollowUpMessage('${contact.phone}', '${contact.name}', '${contact._id}')" 
+                            class="action-button send-button ${contact.messageResent ? 'resent' : ''}"
+                            ${contact.messageResent ? 'disabled' : ''}>
+                        <i class="fab fa-whatsapp"></i> 
+                        ${contact.messageResent ? 'Mensagem Reenviada' : 'Reenviar Mensagem'}
                     </button>
                     <button onclick="editContact('${contact._id}')" class="action-button edit-button">
                         <i class="fas fa-edit"></i> Editar
@@ -923,6 +952,46 @@
             }
         }
 
+        // Add new function for follow-up message
+        async function sendFollowUpMessage(phone, name, contactId) {
+            try {
+                const cleanPhone = phone.replace(/\D/g, '');
+                
+                const followUpMessage = `Olá ${name}! Espero que esteja bem! 😊\n\n` +
+                    `Como você está? Gostaria de saber como tem sido sua experiência em nossa igreja.\n\n` +
+                    `Lembre-se que estamos aqui para apoiá-lo(a) em sua caminhada com Cristo! 🙏\n\n` +
+                    `Se precisar de alguma coisa, pode contar conosco!\n\n` +
+                    `Que Deus continue te abençoando! ✨\n\n` +
+                    `Com carinho,\nJuventude da Igreja Batista Solidária (JIBS)`;
+
+                const response = await fetch('/api/send-whatsapp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({
+                        phone: cleanPhone,
+                        message: followUpMessage,
+                        contactId: contactId,
+                        isResend: true
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    showNotification('✅ Mensagem de acompanhamento enviada com sucesso!');
+                    await loadContacts(); // Reload to update status
+                } else {
+                    showNotification('❌ ' + (data.message || 'Erro ao enviar mensagem'), true);
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                showNotification('❌ Erro ao enviar mensagem de acompanhamento', true);
+            }
+        }
+
         // Função para logout
         function logout() {
             localStorage.removeItem('token');
@@ -934,12 +1003,12 @@
             document.getElementById('add-contact-modal').style.display = 'block';
         }
 
-        // Quando o usuário clica no X, fecha o modal
+        // Fechar no X
         document.querySelector('.close').onclick = function() {
             document.getElementById('add-contact-modal').style.display = 'none';
         }
 
-        // Quando o usuário clica fora do modal, fecha ele
+        // Fechar clicando fora
         window.onclick = function(event) {
             const modal = document.getElementById('add-contact-modal');
             if (event.target == modal) {
