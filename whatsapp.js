@@ -31,7 +31,11 @@ class WhatsAppClient {
 
             // Gerenciar eventos de conexão
             this.sock.ev.on('connection.update', async (update) => {
-                const { connection, lastDisconnect } = update;
+                const { connection, lastDisconnect, qr } = update;
+
+                if (qr) {
+                    qrcode.generate(qr, { small: true });
+                }
 
                 if (connection === 'close') {
                     const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
@@ -40,6 +44,8 @@ class WhatsAppClient {
                         this.reconnectAttempts++;
                         console.log(`Tentando reconectar... Tentativa ${this.reconnectAttempts}`);
                         await this.initialize();
+                    } else {
+                        console.log('Conexão fechada e não será reconectada.');
                     }
                 } else if (connection === 'open') {
                     console.log('Conexão estabelecida com sucesso!');
