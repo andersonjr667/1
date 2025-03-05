@@ -44,6 +44,9 @@ async function initializeWhatsAppClient() {
     try {
         await client.initialize();
         console.log('WhatsApp client initialized successfully.');
+
+        // Exemplo de envio de mensagem após a inicialização
+        await client.sendMessage('5531971533882', 'Olá, esta é uma mensagem de teste!');
     } catch (error) {
         console.error('Failed to initialize WhatsApp client:', error);
     }
