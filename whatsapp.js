@@ -11,6 +11,13 @@ if (!fs.existsSync(AUTH_FOLDER)) {
     fs.mkdirSync(AUTH_FOLDER, { recursive: true });
 }
 
+// Simple logger with different levels
+const logger = {
+    info: (message) => console.log(`INFO: ${message}`),
+    warn: (message) => console.warn(`WARN: ${message}`),
+    error: (message) => console.error(`ERROR: ${message}`)
+};
+
 class WhatsAppClient {
     constructor() {
         this.sock = null;
@@ -42,13 +49,13 @@ class WhatsAppClient {
                     
                     if (shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
                         this.reconnectAttempts++;
-                        console.log(`Tentando reconectar... Tentativa ${this.reconnectAttempts}`);
+                        logger.info(`Tentando reconectar... Tentativa ${this.reconnectAttempts}`);
                         await this.initialize();
                     } else {
-                        console.log('Conexão fechada e não será reconectada.');
+                        logger.warn('Conexão fechada e não será reconectada.');
                     }
                 } else if (connection === 'open') {
-                    console.log('Conexão estabelecida com sucesso!');
+                    logger.info('Conexão estabelecida com sucesso!');
                     this.isConnected = true;
                     this.reconnectAttempts = 0;
                 }
@@ -58,7 +65,7 @@ class WhatsAppClient {
             this.sock.ev.on('creds.update', saveCreds);
 
         } catch (error) {
-            console.error('Erro ao inicializar o WhatsApp:', error);
+            logger.error('Erro ao inicializar o WhatsApp:', error);
             throw error;
         }
     }
@@ -77,11 +84,11 @@ class WhatsAppClient {
                 text: message
             });
 
-            console.log(`Mensagem enviada com sucesso para ${phoneNumber}`);
+            logger.info(`Mensagem enviada com sucesso para ${phoneNumber}`);
             return result;
 
         } catch (error) {
-            console.error(`Erro ao enviar mensagem para ${phoneNumber}:`, error);
+            logger.error(`Erro ao enviar mensagem para ${phoneNumber}:`, error);
             throw error;
         }
     }
