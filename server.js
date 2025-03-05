@@ -954,7 +954,8 @@ app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
 
         // Send message via WhatsApp
         try {
-            const cleanPhone = phone.replace(/\D/g, '');
+            // Clean phone number and add +55 prefix
+            const cleanPhone = '+55' + phone.replace(/\D/g, '');
             console.log('Attempting to send message to:', cleanPhone);
             
             await whatsappClient.sendMessage(cleanPhone, message);
