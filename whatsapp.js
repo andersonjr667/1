@@ -78,6 +78,7 @@ class WhatsAppClient {
 
             // Formata o número para o padrão WhatsApp
             const formattedNumber = `${phoneNumber}@s.whatsapp.net`;
+            logger.info(`Enviando mensagem para ${formattedNumber}`);
 
             // Envia a mensagem
             const result = await this.sock.sendMessage(formattedNumber, {
@@ -94,5 +95,4 @@ class WhatsAppClient {
     }
 }
 
-// Exporta a classe
 module.exports = WhatsAppClient;

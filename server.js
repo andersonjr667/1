@@ -5,13 +5,20 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
-const WhatsAppClient = require('./whatsapp'); // Certifique-se de que este caminho está correto
+const { default: makeWASocket, DisconnectReason } = require('@whiskeysockets/baileys');
+const { Boom } = require('@hapi/boom');
+const P = require('pino');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://anderson:152070@database.o6gmd.mongodb.net/test?retryWrites=true&w=majority';
 const JWT_SECRET = process.env.JWT_SECRET || 'WPYvz*z_ZC5L:?mW.:,MPJ$_U?RD8X';
 const VALID_REGISTRATION_CODE = process.env.REGISTRATION_CODE || 'BOAPARTE2024';
+
+let whatsappClient = null;
+let isInitializing = false;
+let state = null;
 
 // Middleware
 app.use(cors());
@@ -39,19 +46,23 @@ connectDB();
 
 // Initialize WhatsApp Client
 async function initializeWhatsAppClient() {
-    const client = new WhatsAppClient();
-
+    if (isInitializing) return;
+    
     try {
-        await client.initialize();
+        isInitializing = true;
+        const WhatsAppClient = require('./whatsapp'); // Move this require here
+        whatsappClient = new WhatsAppClient();
+        await whatsappClient.initialize();
         console.log('WhatsApp client initialized successfully.');
-
-        // Exemplo de envio de mensagem após a inicialização
-        await client.sendMessage('5531971533882', 'Olá, esta é uma mensagem de teste!');
     } catch (error) {
         console.error('Failed to initialize WhatsApp client:', error);
+        whatsappClient = null;
+    } finally {
+        isInitializing = false;
     }
 }
 
+// Initialize WhatsApp client when the server starts
 initializeWhatsAppClient();
 
 // User Schema
@@ -916,89 +927,61 @@ app.get('/api/auth/verify', authenticateToken, (req, res) => {
     }
 });
 
-let whatsappClient = null;
-let isInitializing = false;
-
-async function initializeWhatsApp() {
-    if (isInitializing) return;
-    
-    try {
-        isInitializing = true;
-        whatsappClient = new WhatsAppClient();
-        await whatsappClient.initialize();
-        console.log('Cliente WhatsApp inicializado com sucesso!');
-    } catch (error) {
-        console.error('Erro ao inicializar cliente WhatsApp:', error);
-        whatsappClient = null;
-    } finally {
-        isInitializing = false;
-    }
-}
-
-// Inicializa o WhatsApp quando o servidor inicia
-initializeWhatsApp();
-
-// Rota para enviar mensagem WhatsApp
+// Route to send WhatsApp message
 app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
     try {
-        const { contactId, message } = req.body;
+        const { phone, message, contactId } = req.body;
 
-        if (!contactId || !message) {
+        if (!phone || !message || !contactId) {
             return res.status(400).json({
                 success: false,
-                message: 'ID do contato e mensagem são obrigatórios'
+                message: 'ID do contato, telefone e mensagem são obrigatórios'
             });
         }
 
-        // Verifica se o cliente WhatsApp está inicializado
+        // Ensure WhatsApp client is initialized and connected
         if (!whatsappClient || !whatsappClient.isConnected) {
-            console.log('Cliente WhatsApp não está conectado. Tentando reinicializar...');
-            await initializeWhatsApp();
+            console.log('WhatsApp client is not connected. Attempting to reinitialize...');
+            await initializeWhatsAppClient();
             
             if (!whatsappClient || !whatsappClient.isConnected) {
                 return res.status(503).json({
                     success: false,
-                    message: 'Serviço do WhatsApp não está disponível no momento'
+                    message: 'WhatsApp service is not available at the moment'
                 });
             }
         }
 
-        // Buscar contato
-        const contact = await Contact.findById(contactId);
-        if (!contact) {
-            return res.status(404).json({
-                success: false,
-                message: 'Contato não encontrado'
-            });
-        }
-
-        // Enviar mensagem via WhatsApp
+        // Send message via WhatsApp
         try {
-            const cleanPhone = contact.phone.replace(/\D/g, '');
-            console.log('Tentando enviar mensagem para:', cleanPhone);
+            const cleanPhone = phone.replace(/\D/g, '');
+            console.log('Attempting to send message to:', cleanPhone);
             
             await whatsappClient.sendMessage(cleanPhone, message);
             
-            // Atualizar status de mensagem do contato
-            contact.receivedMessage = true;
-            await contact.save();
+            // Update contact's message status
+            const contact = await Contact.findById(contactId);
+            if (contact) {
+                contact.receivedMessage = true;
+                await contact.save();
+            }
 
             res.json({
                 success: true,
-                message: 'Mensagem enviada com sucesso'
+                message: 'Message sent successfully'
             });
         } catch (whatsappError) {
-            console.error('Erro ao enviar mensagem WhatsApp:', whatsappError);
+            console.error('Error sending WhatsApp message:', whatsappError);
             res.status(500).json({
                 success: false,
-                message: 'Erro ao enviar mensagem via WhatsApp: ' + whatsappError.message
+                message: 'Error sending WhatsApp message: ' + whatsappError.message
             });
         }
     } catch (error) {
-        console.error('Erro ao processar envio:', error);
+        console.error('Error processing request:', error);
         res.status(500).json({
             success: false,
-            message: 'Erro interno do servidor: ' + error.message
+            message: 'Internal server error: ' + error.message
         });
     }
 });
@@ -1031,3 +1014,42 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+let sock;
+const MAX_RETRIES = 5;
+let retries = 0;
+
+async function connectToWhatsApp() {
+    const { makeWASocket } = require('@whiskeysockets/baileys');
+    
+    try {
+        sock = makeWASocket({
+            logger: P({ level: 'info' }),
+            printQRInTerminal: true,
+            auth: state
+        });
+
+        sock.ev.on('connection.update', async (update) => {
+            const { connection, lastDisconnect } = update;
+            if (connection === 'close') {
+                const shouldReconnect = (lastDisconnect?.error)?.output?.statusCode !== DisconnectReason.loggedOut;
+                if (shouldReconnect && retries < MAX_RETRIES) {
+                    retries++;
+                    console.log(`INFO: Tentando reconectar... Tentativa ${retries}`);
+                    await connectToWhatsApp();
+                } else {
+                    console.log('INFO: Não foi possível reconectar. Verifique as credenciais e tente novamente.');
+                }
+            } else if (connection === 'open') {
+                retries = 0;
+                console.log('INFO: Conexão estabelecida com sucesso!');
+            }
+        });
+
+        sock.ev.on('creds.update', saveState);
+    } catch (error) {
+        console.error('Erro ao conectar:', error);
+    }
+}
+
+connectToWhatsApp().catch(err => console.error('Erro ao conectar:', err));
