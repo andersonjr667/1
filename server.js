@@ -37,6 +37,42 @@ const connectDB = async () => {
 
 connectDB();
 
+// Initialize WhatsApp Client
+const initializeWhatsAppClient = () => {
+    const client = new WhatsAppClient();
+
+    client.on('qr', qr => {
+        console.log('QR RECEIVED', qr);
+    });
+
+    client.on('ready', () => {
+        console.log('Cliente WhatsApp inicializado com sucesso!');
+    });
+
+    client.on('authenticated', () => {
+        console.log('Autenticado no WhatsApp');
+    });
+
+    client.on('auth_failure', msg => {
+        console.error('Falha na autenticação', msg);
+    });
+
+    client.on('disconnected', (reason) => {
+        console.log('Cliente WhatsApp desconectado', reason);
+        if (reason === 'CONFLICT') {
+            console.log('Conflito de conexão detectado. Tentando reconectar...');
+            setTimeout(initializeWhatsAppClient, 5000); // Retry after 5 seconds
+        } else {
+            console.log('Tentando reconectar...');
+            setTimeout(initializeWhatsAppClient, 5000); // Retry after 5 seconds
+        }
+    });
+
+    client.initialize();
+};
+
+initializeWhatsAppClient();
+
 // User Schema
 const userSchema = new mongoose.Schema({
     username: { 
