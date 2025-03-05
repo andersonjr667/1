@@ -1,4 +1,4 @@
 git status
 git add .  
-git commit -m "Erro do whatsapp corrigido"
+git commit -m "Erro do whatsapp e no deploy no render corrigido"
 git push origin main
