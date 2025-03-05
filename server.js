@@ -18,6 +18,11 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Endpoint /ping
+app.get('/ping', (req, res) => {
+  res.send('OK');
+});
+
 // MongoDB Connection with retry logic
 const connectDB = async () => {
     try {
