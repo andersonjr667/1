@@ -68,6 +68,14 @@
                 window.location.replace('login.html');
             }
         });
+
+        // In your login success handler
+        async function handleLoginSuccess(response) {
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('username', response.username);
+            localStorage.setItem('role', response.role); // Make sure this is set
+            window.location.href = 'dashboard.html';
+        }
     </script>
 </body>
 </html>

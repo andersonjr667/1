@@ -388,22 +388,27 @@
 
     <div id="add-member-modal" class="modal">
         <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Adicionar Novo Membro</h2>
-            <form id="member-form" onsubmit="return addMember(event)">
+            <div class="modal-header">
+                <h3>Adicionar Novo Membro</h3>
+                <button class="close" onclick="closeModal('add-member-modal')">&times;</button>
+            </div>
+            <form id="member-form" onsubmit="addMember(event)">
                 <div class="form-group">
-                    <label for="name">Nome:</label>
-                    <input type="text" id="name" required>
+                    <label for="name">Nome Completo</label>
+                    <input type="text" id="name" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label for="phone">Telefone:</label>
-                    <input type="tel" id="phone" required>
+                    <label for="phone">Telefone</label>
+                    <input type="tel" id="phone" name="phone" required>
                 </div>
                 <div class="form-group">
-                    <label for="birthday">Data de Nascimento:</label>
-                    <input type="date" id="birthday" required>
+                    <label for="birthday">Data de Nascimento</label>
+                    <input type="date" id="birthday" name="birthday" required>
                 </div>
-                <button type="submit" class="add-member-button">Salvar</button>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-action btn-primary">Adicionar</button>
+                    <button type="button" class="btn-action btn-secondary" onclick="closeModal('add-member-modal')">Cancelar</button>
+                </div>
             </form>
         </div>
     </div>
@@ -414,6 +419,9 @@
         // Carregar membros
         async function loadMembers() {
             try {
+                const membersList = document.getElementById('members-list');
+                membersList.classList.add('loading');
+
                 const response = await fetch('/api/members', {
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -424,9 +432,13 @@
                 
                 members = await response.json();
                 displayMembers();
+                addTouchFeedback(); // Re-add touch feedback for new elements
+
             } catch (error) {
                 console.error('Erro:', error);
                 alert('Erro ao carregar membros');
+            } finally {
+                membersList.classList.remove('loading');
             }
         }
 
@@ -550,19 +562,42 @@
             }
 
             try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Token não encontrado. Por favor, faça login novamente.');
+                }
+
                 const response = await fetch(`/api/members/${memberId}`, {
                     method: 'DELETE',
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (!response.ok) throw new Error('Erro ao excluir membro');
+                if (!response.ok) {
+                    // Try to parse error response as JSON
+                    let errorMessage = 'Erro ao excluir membro';
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.message || errorMessage;
+                    } catch (e) {
+                        // If response is not JSON, use status text
+                        errorMessage = `Erro: ${response.status} - ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
 
-                await loadMembers();
+                // Remove member from local array and update display
+                members = members.filter(member => member._id !== memberId);
+                displayMembers();
+                
+                // Show success message
+                alert('Membro excluído com sucesso!');
+
             } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao excluir membro');
+                console.error('Erro ao excluir membro:', error);
+                alert(error.message || 'Erro ao excluir membro');
             }
         }
 
@@ -586,6 +621,44 @@
                 }
             };
         });
+
+        // Touch Feedback
+        function addTouchFeedback() {
+            const buttons = document.querySelectorAll('.btn-action, .disciple-button, .action-button');
+            
+            buttons.forEach(button => {
+                button.addEventListener('touchstart', function() {
+                    this.classList.add('active');
+                });
+                
+                button.addEventListener('touchend', function() {
+                    this.classList.remove('active');
+                });
+            });
+        }
+
+        // Pull to Refresh
+        let touchstartY = 0;
+        let touchendY = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchstartY = e.touches[0].clientY;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchendY = e.changedTouches[0].clientY;
+            if (touchendY - touchstartY > 50 && window.scrollY === 0) {
+                // Call appropriate refresh function
+                if (location.pathname.includes('members.html')) {
+                    loadMembers();
+                } else {
+                    loadContacts();
+                }
+            }
+        });
+
+        // Call touch feedback on page load
+        document.addEventListener('DOMContentLoaded', addTouchFeedback);
     </script>
 </body>
 </html>

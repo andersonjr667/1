@@ -76,15 +76,24 @@
         .user-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 1rem;
         }
 
         .user-info span {
-            background: #f44336;
+            background: #4CAF50;
             color: white;
-            padding: 5px 10px;
-            border-radius: 15px;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
             font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        #user-name {
+            background: #2E7D32;
+        }
+
+        #user-role {
+            background: #1B5E20;
         }
 
         .admin-buttons {
@@ -282,6 +291,54 @@
             background: #888;
             transform: none;
         }
+
+        .navigation-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .navigation-buttons {
+                flex-direction: column;
+            }
+        }
+
+        /* Update the user-info styles */
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        #username-display {
+            background: #2E7D32;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logout-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body class="dashboard">
@@ -292,29 +349,18 @@
         <div class="dashboard-header">
             <h2>Dashboard</h2>
             <p>Gerencie seus contatos</p>
-            <div class="user-info">
-                <span id="user-name"></span>
-                <span id="user-role"></span>
-            </div>
-            <!-- Botões de admin em um container separado -->
-            <div id="admin-buttons" class="admin-buttons" style="display: none;">
-                <button class="users-button" onclick="window.location.href='users.html'">
-                    <i class="fas fa-users"></i>
-                    Gerenciar Usuários
-                </button>
-                <button class="users-button" onclick="window.location.href='admin-dashboard.html'">
-                    <i class="fas fa-user-shield"></i>
-                    Dashboard Admin
-                </button>
-                <button class="users-button" onclick="window.location.href='members.html'">
-                    <i class="fas fa-user-friends"></i>
-                    Gerenciar Membros
-                </button>
-            </div>
+            <!-- Admin buttons only visible to admins -->
+            <div id="admin-buttons" class="admin-buttons" style="display: none;"></div>
+        </div>
+        <div class="navigation-buttons">
+            <button class="users-button" onclick="window.location.href='members.html'">
+                <i class="fas fa-user-friends"></i>
+                Gerenciar Membros
+            </button>
         </div>
         <div class="content">
             <div class="header">
-                <h1>BoaParte</h1>
+                <h1>Boa Parte</h1>
                 <div class="user-info">
                     <span id="username-display"></span>
                     <button onclick="logout()" class="logout-btn">Sair</button>
@@ -338,24 +384,35 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h2>Adicionar Novo Contato</h2>
-                        <span class="close">&times;</span>
+                        <span class="close" onclick="closeModal('add-contact-modal')">&times;</span>
                     </div>
-                    <form id="contact-form" onsubmit="return addContact(event)">
+                    <form id="contact-form" onsubmit="addContact(event)">
                         <div class="form-group">
-                            <label for="name">Nome:</label>
-                            <input type="text" id="name" name="name" required>
+                            <label for="name">
+                                <i class="fas fa-user"></i> Nome Completo
+                            </label>
+                            <input type="text" id="name" name="name" required placeholder="Digite o nome completo">
                         </div>
                         <div class="form-group">
-                            <label for="phone">Telefone:</label>
-                            <input type="tel" id="phone" name="phone" required>
+                            <label for="phone">
+                                <i class="fas fa-phone"></i> Telefone
+                            </label>
+                            <input type="tel" id="phone" name="phone" required placeholder="(00) 00000-0000">
                         </div>
                         <div class="form-group">
-                            <label for="birthday">Data de Aniversário: (opcional)</label>
-                            <input type="date" id="birthday" name="birthday">
+                            <label for="birthday">
+                                <i class="fas fa-birthday-cake"></i> Data de Nascimento
+                            </label>
+                            <input type="date" id="birthday" name="birthday" required>
                         </div>
-                        <button type="submit" class="users-button">
-                            <i class="fas fa-save"></i> Salvar
-                        </button>
+                        <div class="modal-actions">
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-plus"></i> Adicionar Contato
+                            </button>
+                            <button type="button" class="cancel-btn" onclick="closeModal('add-contact-modal')">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -768,7 +825,7 @@
         async function loadMonthContacts(month) {
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch(`/api/contacts/month/${month}`, {
+                const response = await fetch('/api/contacts/birthdays/' + month, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -785,15 +842,15 @@
                 const selectedMonthSpan = document.getElementById('selected-month');
                 
                 // Atualiza o mês selecionado
-                const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                                  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                const monthNames = [
+                    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+                ];
                 const monthName = monthNames[parseInt(month) - 1];
                 selectedMonthSpan.textContent = monthName;
 
                 // Limpa a lista atual
                 contactsList.innerHTML = '';
-                
-                // Readiciona o estado vazio
                 contactsList.appendChild(emptyState);
 
                 if (!data.contacts || data.contacts.length === 0) {
@@ -804,15 +861,22 @@
 
                 emptyState.style.display = 'none';
                 
+                // Ordena os contatos por dia do aniversário
+                const sortedContacts = data.contacts.sort((a, b) => {
+                    const dayA = new Date(a.birthday).getDate();
+                    const dayB = new Date(b.birthday).getDate();
+                    return dayA - dayB;
+                });
+                
                 // Renderiza os contatos
-                data.contacts.forEach(contact => {
+                sortedContacts.forEach(contact => {
                     const contactElement = createContactElement(contact);
                     contactsList.appendChild(contactElement);
                 });
 
             } catch (error) {
                 console.error('Erro:', error);
-                showNotification('❌ Erro ao carregar contatos', true);
+                showNotification('❌ Erro ao carregar aniversariantes', true);
             }
         }
 
@@ -821,11 +885,14 @@
             const contactElement = document.createElement('div');
             contactElement.className = 'contact-card';
             
-            const timestamp = new Date(contact.createdAt || Date.now());
-            const formattedDate = timestamp.toLocaleDateString('pt-BR');
-            const formattedTime = timestamp.toLocaleTimeString('pt-BR');
+            // Format birthday date
+            const birthday = contact.birthday ? new Date(contact.birthday) : null;
+            const formattedBirthday = birthday ? 
+                `<p class="birthday-info">
+                    <i class="fas fa-birthday-cake"></i> 
+                    ${birthday.getDate().toString().padStart(2, '0')}/${(birthday.getMonth() + 1).toString().padStart(2, '0')}
+                </p>` : '';
 
-            // Updated message status to include resend state
             const messageStatus = contact.receivedMessage ? 
                 `<p class="message-received">
                     <i class="fas fa-check-circle"></i> Mensagem enviada
@@ -837,8 +904,8 @@
                 <div class="contact-info">
                     <h3>${contact.name}</h3>
                     <p><i class="fas fa-phone"></i> ${contact.phone}</p>
+                    ${formattedBirthday}
                     ${messageStatus}
-                    <p class="timestamp"><i class="far fa-clock"></i> ${formattedDate} ${formattedTime}</p>
                 </div>
                 <div class="button-group">
                     <button onclick="sendFollowUpMessage('${contact.phone}', '${contact.name}', '${contact._id}')" 
@@ -1000,8 +1067,31 @@
 
         // Funções do Modal
         function showAddContactModal() {
-            document.getElementById('add-contact-modal').style.display = 'block';
+            const modal = document.getElementById('add-contact-modal');
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            document.getElementById('name').focus();
         }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            document.getElementById('contact-form').reset();
+        }
+
+        // Event listener for clicking outside the modal
+        document.addEventListener('click', function(event) {
+            const modal = document.getElementById('add-contact-modal');
+            if (event.target === modal) {
+                closeModal('add-contact-modal');
+            }
+        });
+
+        // Prevent propagation from modal content
+        document.querySelector('.modal-content').addEventListener('click', function(event) {
+            event.stopPropagation();
+        });
 
         // Fechar no X
         document.querySelector('.close').onclick = function() {
@@ -1032,15 +1122,24 @@
                 const role = localStorage.getItem('role');
                 const isAdmin = role === 'admin';
                 
-                // Mostrar/ocultar botões de admin
-                document.querySelectorAll('.admin-only').forEach(element => {
-                    element.style.display = isAdmin ? '' : 'none';
-                });
-
-                // Mostrar/ocultar botões do dashboard admin
+                // Completely hide admin buttons if not admin
                 const adminButtons = document.getElementById('admin-buttons');
                 if (adminButtons) {
-                    adminButtons.style.display = isAdmin ? 'flex' : 'none';
+                    if (isAdmin) {
+                        adminButtons.style.display = 'flex';
+                        adminButtons.innerHTML = `
+                            <button class="users-button" onclick="window.location.href='users.html'">
+                                <i class="fas fa-users"></i>
+                                Gerenciar Usuários
+                            </button>
+                            <button class="users-button" onclick="window.location.href='admin-dashboard.html'">
+                                <i class="fas fa-user-shield"></i>
+                                Dashboard Admin
+                            </button>
+                        `;
+                    } else {
+                        adminButtons.remove(); // Remove completely instead of just hiding
+                    }
                 }
 
                 return isAdmin;
@@ -1051,23 +1150,155 @@
         }
 
         // Inicializa a página
+        // Update the window load event listener to properly display the username and role
         window.addEventListener('load', async () => {
             const token = localStorage.getItem('token');
+            const username = localStorage.getItem('username');
+            const role = localStorage.getItem('role');
+
             if (!token) {
                 window.location.href = 'login.html';
                 return;
             }
 
-            // Atualiza o nome do usuário
-            const username = localStorage.getItem('username');
-            if (username) {
-                document.getElementById('username-display').textContent = username;
-            }
+            try {
+                // Update only the username display in header
+                const usernameDisplay = document.getElementById('username-display');
+                if (usernameDisplay) {
+                    const displayName = username || 'Usuário';
+                    usernameDisplay.innerHTML = `
+                        <i class="fas fa-user"></i> 
+                        Olá, ${displayName}!
+                        ${role === 'admin' ? ' (Administrador)' : ''}
+                    `;
+                }
 
-            // Carrega os contatos e verifica acesso admin
-            await loadContacts();
-            await checkAdminAccess();
+                await loadContacts();
+                await checkAdminAccess();
+            } catch (error) {
+                console.error('Erro ao carregar informações:', error);
+                showNotification('Erro ao carregar informações do usuário', true);
+            }
         });
+      
+    // Touch Feedback
+    function addTouchFeedback() {
+        const buttons = document.querySelectorAll('.btn-action, .disciple-button, .action-button');
+        
+        buttons.forEach(button => {
+            button.addEventListener('touchstart', function() {
+                this.classList.add('active');
+            });
+            
+            button.addEventListener('touchend', function() {
+                this.classList.remove('active');
+            });
+        });
+    }
+
+    // Pull to Refresh
+    let touchstartY = 0;
+    let touchendY = 0;
+
+    document.addEventListener('touchstart', e => {
+        touchstartY = e.touches[0].clientY;
+    });
+
+    document.addEventListener('touchend', e => {
+        touchendY = e.changedTouches[0].clientY;
+        if (touchendY - touchstartY > 50 && window.scrollY === 0) {
+            // Call appropriate refresh function
+            if (location.pathname.includes('members.html')) {
+                loadMembers();
+            } else {
+                loadContacts();
+            }
+        }
+    });
+
+    // Call touch feedback on page load
+    document.addEventListener('DOMContentLoaded', addTouchFeedback);
+
+    function showAddMemberModal() {
+        const modal = document.getElementById('add-member-modal');
+        modal.style.display = 'flex';
+        // Focus on first input
+        setTimeout(() => {
+            document.getElementById('name').focus();
+        }, 100);
+
+        // Prevent body scrolling when modal is open
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.style.display = 'none';
+        // Restore body scrolling
+        document.body.style.overflow = 'auto';
+        // Reset form if closing add member modal
+        if (modalId === 'add-member-modal') {
+            document.getElementById('member-form').reset();
+        }
+    }
+
+    // Add to your existing JavaScript in dashboard.html
+    function formatPhoneNumber(input) {
+        let value = input.value.replace(/\D/g, '');
+        if (value.length <= 11) {
+            value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+        }
+        input.value = value;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const phoneInput = document.getElementById('phone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', () => formatPhoneNumber(phoneInput));
+        }
+
+        const form = document.getElementById('add-contact-form');
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const submitBtn = form.querySelector('.submit-btn');
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adicionando...';
+
+                try {
+                    await addContact(e);
+                    form.reset();
+                    showNotification('✅ Contato adicionado com sucesso!');
+                } catch (error) {
+                    showNotification('❌ Erro ao adicionar contato', true);
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Contato';
+                }
+            });
+        }
+    });
+
+    // Add these functions to your JavaScript
+    function showModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Restore scrolling
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+    }
     </script>
 </body>
 </html>
