@@ -47,6 +47,9 @@
             animation: fadeIn 0.5s ease;
             position: relative;
             top: 20px;
+            max-height: 90vh; /* Reduce from 100vh to allow scrolling */
+            overflow-y: auto;
+            padding-bottom: 2rem; /* Add padding at bottom */
         }
 
         @keyframes fadeIn {
@@ -339,6 +342,33 @@
             background: #d32f2f;
             transform: translateY(-2px);
         }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .contact-metadata {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #eee;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .contact-metadata span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .contact-metadata i {
+            color: #888;
+        }
     </style>
 </head>
 <body class="dashboard">
@@ -389,9 +419,9 @@
                     <form id="contact-form" onsubmit="addContact(event)">
                         <div class="form-group">
                             <label for="name">
-                                <i class="fas fa-user"></i> Nome Completo
+                                <i class="fas fa-user"></i> Nome
                             </label>
-                            <input type="text" id="name" name="name" required placeholder="Digite o nome completo">
+                            <input type="text" id="name" name="name" required placeholder="Digite o nome!">
                         </div>
                         <div class="form-group">
                             <label for="phone">
@@ -825,58 +855,25 @@
         async function loadMonthContacts(month) {
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch('/api/contacts/birthdays/' + month, {
+                const response = await fetch(`/api/contacts/month/${month}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 });
 
-                if (!response.ok) {
-                    throw new Error('Erro ao carregar contatos');
-                }
+                if (!response.ok) throw new Error('Erro ao carregar contatos');
 
                 const data = await response.json();
-                const contactsList = document.getElementById('contacts-list');
-                const emptyState = document.getElementById('empty-state');
-                const emptyMonth = document.getElementById('empty-month');
-                const selectedMonthSpan = document.getElementById('selected-month');
-                
-                // Atualiza o mês selecionado
                 const monthNames = [
                     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
                     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
                 ];
-                const monthName = monthNames[parseInt(month) - 1];
-                selectedMonthSpan.textContent = monthName;
 
-                // Limpa a lista atual
-                contactsList.innerHTML = '';
-                contactsList.appendChild(emptyState);
-
-                if (!data.contacts || data.contacts.length === 0) {
-                    emptyMonth.textContent = monthName.toLowerCase();
-                    emptyState.style.display = 'block';
-                    return;
-                }
-
-                emptyState.style.display = 'none';
-                
-                // Ordena os contatos por dia do aniversário
-                const sortedContacts = data.contacts.sort((a, b) => {
-                    const dayA = new Date(a.birthday).getDate();
-                    const dayB = new Date(b.birthday).getDate();
-                    return dayA - dayB;
-                });
-                
-                // Renderiza os contatos
-                sortedContacts.forEach(contact => {
-                    const contactElement = createContactElement(contact);
-                    contactsList.appendChild(contactElement);
-                });
-
+                document.getElementById('selected-month').textContent = monthNames[month - 1];
+                displayContacts(data);
             } catch (error) {
                 console.error('Erro:', error);
-                showNotification('❌ Erro ao carregar aniversariantes', true);
+                showNotification('❌ Erro ao carregar contatos', true);
             }
         }
 
@@ -893,33 +890,34 @@
                     ${birthday.getDate().toString().padStart(2, '0')}/${(birthday.getMonth() + 1).toString().padStart(2, '0')}
                 </p>` : '';
 
-            const messageStatus = contact.receivedMessage ? 
-                `<p class="message-received">
-                    <i class="fas fa-check-circle"></i> Mensagem enviada
-                    ${contact.messageResent ? '<span class="resent-badge"><i class="fas fa-sync-alt"></i> Reenviada</span>' : ''}
-                </p>` : 
-                '<p class="message-pending"><i class="fas fa-clock"></i> Aguardando envio</p>';
-
             contactElement.innerHTML = `
                 <div class="contact-info">
                     <h3>${contact.name}</h3>
                     <p><i class="fas fa-phone"></i> ${contact.phone}</p>
                     ${formattedBirthday}
-                    ${messageStatus}
                 </div>
-                <div class="button-group">
-                    <button onclick="sendFollowUpMessage('${contact.phone}', '${contact.name}', '${contact._id}')" 
-                            class="action-button send-button ${contact.messageResent ? 'resent' : ''}"
-                            ${contact.messageResent ? 'disabled' : ''}>
-                        <i class="fab fa-whatsapp"></i> 
-                        ${contact.messageResent ? 'Mensagem Reenviada' : 'Reenviar Mensagem'}
-                    </button>
-                    <button onclick="editContact('${contact._id}')" class="action-button edit-button">
-                        <i class="fas fa-edit"></i> Editar
-                    </button>
-                    <button onclick="deleteContact('${contact._id}')" class="action-button delete-button">
-                        <i class="fas fa-trash-alt"></i> Excluir
-                    </button>
+                <div class="button-container">
+                    <div class="main-button">
+                        <button onclick="toggleActionMenu(this)" class="action-button primary-action">
+                            <i class="fas fa-ellipsis-v"></i> Ações
+                        </button>
+                    </div>
+                    <div class="action-menu">
+                        <button onclick="makeMember('${contact._id}')" class="action-button make-member-btn">
+                            <i class="fas fa-user-plus"></i> Tornar Membro
+                        </button>
+                        <button onclick="sendFollowUpMessage('${contact.phone}', '${contact.name}', '${contact._id}')" 
+                                class="action-button send-button ${contact.messageResent ? 'resent' : ''}"
+                                ${contact.messageResent ? 'disabled' : ''}>
+                            <i class="fab fa-whatsapp"></i> Enviar Mensagem
+                        </button>
+                        <button onclick="editContact('${contact._id}')" class="action-button edit-button">
+                            <i class="fas fa-edit"></i> Editar
+                        </button>
+                        <button onclick="deleteContact('${contact._id}')" class="action-button delete-button">
+                            <i class="fas fa-trash"></i> Excluir
+                        </button>
+                    </div>
                 </div>
             `;
             return contactElement;
@@ -1299,6 +1297,51 @@
             document.body.style.overflow = 'auto';
         }
     }
+
+    // Add the makeMember function
+    async function makeMember(contactId) {
+        if (!confirm('Deseja transformar este contato em membro?')) return;
+
+        try {
+            const response = await fetch(`/api/contacts/${contactId}/make-member`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Erro ao tornar membro');
+
+            showNotification('✅ Contato transformado em membro com sucesso!');
+            await loadContacts();
+        } catch (error) {
+            console.error('Erro:', error);
+            showNotification('❌ Erro ao tornar membro', true);
+        }
+    }
+
+    // Add this function to toggle the action menu
+    function toggleActionMenu(button) {
+        const actionMenu = button.parentElement.nextElementSibling;
+        const allMenus = document.querySelectorAll('.action-menu');
+        
+        // Close all other menus
+        allMenus.forEach(menu => {
+            if (menu !== actionMenu) menu.classList.remove('show');
+        });
+        
+        actionMenu.classList.toggle('show');
+    }
+
+    // Close menus when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.button-container')) {
+            document.querySelectorAll('.action-menu').forEach(menu => {
+                menu.classList.remove('show');
+            });
+        }
+    });
     </script>
 </body>
 </html>
