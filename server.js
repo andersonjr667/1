@@ -10,6 +10,24 @@ const { Boom } = require('@hapi/boom');
 const P = require('pino');
 const fs = require('fs');
 
+// Adicione no início do server.js, após as importações
+const authPath = './auth_info.json';
+
+// Verifica se o arquivo de autenticação existe
+if (!fs.existsSync(authPath)) {
+    fs.writeFileSync(authPath, JSON.stringify({}));
+    console.log('Arquivo de autenticação criado');
+}
+
+// Função para salvar o estado
+const saveState = async (state) => {
+    try {
+        fs.writeFileSync(authPath, JSON.stringify(state, null, 2));
+    } catch (error) {
+        console.error('Erro ao salvar estado:', error);
+    }
+};
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://anderson:152070@database.o6gmd.mongodb.net/test?retryWrites=true&w=majority';
@@ -1125,4 +1143,74 @@ async function connectToWhatsApp() {
     }
 }
 
+// Rota para buscar todos os contatos (mantenha esta parte)
+app.get('/api/contacts/', authenticateToken, async (req, res) => {
+    try {
+        let contacts;
+        
+        // Se for admin, busca todos os contatos
+        if (req.user.role === 'admin') {
+            contacts = await Contact.find().sort({ createdAt: -1 });
+        } else {
+            // Se não for admin, busca apenas os contatos do usuário
+            contacts = await Contact.find({ 
+                username: req.user.username 
+            }).sort({ createdAt: -1 });
+        }
+
+        res.json({
+            success: true,
+            contacts: contacts.map(contact => ({
+                _id: contact._id,
+                name: contact.name,
+                phone: contact.phone,
+                birthday: contact.birthday,
+                createdAt: contact.createdAt,
+                owner: contact.owner || contact.username,
+                username: contact.username,
+                messageResent: contact.receivedMessage || false
+            }))
+        });
+    } catch (error) {
+        console.error('Erro ao buscar contatos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erro ao buscar contatos',
+            error: error.message
+        });
+    }
+});
+
+// Rota para obter todos os contatos
+app.get('/api/contacts/', authenticateToken, async (req, res) => {
+    try {
+        const contacts = await Contact.find();
+        res.json({ success: true, contacts });
+    } catch (error) {
+        console.error('Erro ao obter contatos:', error);
+        res.status(500).json({ success: false, message: 'Erro ao obter contatos' });
+    }
+});
+
+// Rota para enviar mensagem WhatsApp
+app.post('/api/send-whatsapp', authenticateToken, async (req, res) => {
+    try {
+        const { phone, message, contactId } = req.body;
+        if (!whatsappClient) {
+            return res.status(500).json({ success: false, message: 'WhatsApp client not initialized' });
+        }
+
+        await whatsappClient.sendMessage(phone, message);
+
+        // Update contact to mark message as sent
+        await Contact.findByIdAndUpdate(contactId, { messageResent: true });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Erro ao enviar mensagem WhatsApp:', error);
+        res.status(500).json({ success: false, message: 'Erro ao enviar mensagem WhatsApp' });
+    }
+});
+
+// Mantenha apenas a conexão do WhatsApp no final do arquivo
 connectToWhatsApp().catch(err => console.error('Erro ao conectar:', err));

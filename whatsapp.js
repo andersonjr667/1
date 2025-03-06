@@ -2,6 +2,8 @@ const { default: makeWASocket, DisconnectReason, useMultiFileAuthState } = requi
 const qrcode = require('qrcode-terminal');
 const fs = require('fs');
 const path = require('path');
+const { Boom } = require('@hapi/boom');
+const P = require('pino');
 
 // Diretório para armazenar as credenciais
 const AUTH_FOLDER = './whatsapp-auth';
@@ -24,6 +26,12 @@ class WhatsAppClient {
         this.isConnected = false;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
+        this.authPath = './auth_info.json';
+        this.logger = P({ level: 'info' });
+
+        if (!fs.existsSync(this.authPath)) {
+            fs.writeFileSync(this.authPath, JSON.stringify({}));
+        }
     }
 
     async initialize() {
@@ -33,7 +41,8 @@ class WhatsAppClient {
             this.sock = makeWASocket({
                 printQRInTerminal: true,
                 auth: state,
-                defaultQueryTimeoutMs: undefined
+                defaultQueryTimeoutMs: undefined,
+                logger: this.logger
             });
 
             // Gerenciar eventos de conexão
@@ -45,7 +54,7 @@ class WhatsAppClient {
                 }
 
                 if (connection === 'close') {
-                    const shouldReconnect = lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+                    const shouldReconnect = (lastDisconnect.error = Boom)?.output?.statusCode !== DisconnectReason.loggedOut;
                     
                     if (shouldReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
                         this.reconnectAttempts++;
@@ -62,7 +71,9 @@ class WhatsAppClient {
             });
 
             // Salvar credenciais quando atualizadas
-            this.sock.ev.on('creds.update', saveCreds);
+            this.sock.ev.on('creds.update', (creds) => {
+                fs.writeFileSync(this.authPath, JSON.stringify(creds, null, 2));
+            });
 
         } catch (error) {
             logger.error('Erro ao inicializar o WhatsApp:', error);

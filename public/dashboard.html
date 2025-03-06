@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="styles/common.css">
     <link rel="stylesheet" href="styles/shared.css">
     <link rel="stylesheet" href="styles/dashboard.css">
+    <script src="js/messages.js"></script>
     <style>
         /* Adicione esta seção para a imagem do dashboard */
         .logo {
@@ -452,18 +453,18 @@
                 <div class="filter-group">
                     <select id="month-filter">
                         <option value="all">Todos os Meses</option>
-                        <option value="1">Janeiro</option>
-                        <option value="2">Fevereiro</option>
-                        <option value="3">Março</option>
-                        <option value="4">Abril</option>
-                        <option value="5">Maio</option>
-                        <option value="6">Junho</option>
-                        <option value="7">Julho</option>
-                        <option value="8">Agosto</option>
-                        <option value="9">Setembro</option>
-                        <option value="10">Outubro</option>
-                        <option value="11">Novembro</option>
-                        <option value="12">Dezembro</option>
+                        <option value="1">Janeiro (Adicionados)</option>
+                        <option value="2">Fevereiro (Adicionados)</option>
+                        <option value="3">Março (Adicionados)</option>
+                        <option value="4">Abril (Adicionados)</option>
+                        <option value="5">Maio (Adicionados)</option>
+                        <option value="6">Junho (Adicionados)</option>
+                        <option value="7">Julho (Adicionados)</option>
+                        <option value="8">Agosto (Adicionados)</option>
+                        <option value="9">Setembro (Adicionados)</option>
+                        <option value="10">Outubro (Adicionados)</option>
+                        <option value="11">Novembro (Adicionados)</option>
+                        <option value="12">Dezembro (Adicionados)</option>
                     </select>
                     <button onclick="filterContacts()" class="ok-button">
                         <i class="fas fa-check"></i> OK
@@ -527,6 +528,12 @@
     </div>
 
     <script>
+        // Add this at the top of your JavaScript code
+        const monthNames = [
+            'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+            'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+        ];
+
         // Função para formatar número de telefone
         function formatPhoneNumber(input) {
             let value = input.value.replace(/\D/g, '');
@@ -615,6 +622,7 @@
                 const name = document.getElementById('name').value.trim();
                 const phone = document.getElementById('phone').value.trim();
                 const birthday = document.getElementById('birthday').value.trim();
+                const createdBy = localStorage.getItem('username'); // Get current user's name
 
                 if (!name || !phone) {
                     throw new Error('Nome e telefone são obrigatórios');
@@ -635,7 +643,8 @@
                     body: JSON.stringify({ 
                         name, 
                         phone, 
-                        birthday: birthday || null 
+                        birthday: birthday || null,
+                        createdBy
                     })
                 });
 
@@ -829,8 +838,40 @@
             });
         }
 
-        // Função para carregar todos os contatos
+        // Update the loadContacts function
         async function loadContacts() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/contacts/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    throw new Error('Erro ao carregar contatos');
+                }
+
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error('Erro ao carregar dados dos contatos');
+                }
+
+                displayContacts(data);
+                console.log('Contatos carregados:', data.contacts.length);
+
+            } catch (error) {
+                console.error('Erro ao carregar contatos:', error);
+                showNotification('❌ Erro ao carregar contatos', true);
+            }
+        }
+
+        // Update the loadMonthContacts function
+        async function loadMonthContacts(month) {
             try {
                 const token = localStorage.getItem('token');
                 const response = await fetch('/api/contacts', {
@@ -839,40 +880,42 @@
                     }
                 });
 
-                if (!response.ok) {
-                    throw new Error('Erro ao carregar contatos');
-                }
-
-                const data = await response.json();
-                displayContacts(data);
-            } catch (error) {
-                console.error('Erro ao carregar contatos:', error);
-                showNotification('Erro ao carregar contatos', true);
-            }
-        }
-
-        // Função para carregar contatos de um mês específico
-        async function loadMonthContacts(month) {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`/api/contacts/month/${month}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
                 if (!response.ok) throw new Error('Erro ao carregar contatos');
 
                 const data = await response.json();
-                const monthNames = [
-                    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
-                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-                ];
+                
+                // Filter contacts by creation month
+                const filteredContacts = data.contacts.filter(contact => {
+                    if (!contact.createdAt) return false;
+                    const creationMonth = new Date(contact.createdAt).getMonth() + 1;
+                    return creationMonth === parseInt(month);
+                });
 
-                document.getElementById('selected-month').textContent = monthNames[month - 1];
-                displayContacts(data);
+                // Update the display
+                const selectedMonthSpan = document.getElementById('selected-month');
+                if (selectedMonthSpan) {
+                    selectedMonthSpan.textContent = `${monthNames[parseInt(month) - 1]} (Contatos adicionados)`;
+                }
+
+                // Display filtered contacts
+                displayContacts({ contacts: filteredContacts });
+
+                // Update empty state if needed
+                const emptyState = document.getElementById('empty-state');
+                if (emptyState) {
+                    if (filteredContacts.length === 0) {
+                        const emptyMonth = document.getElementById('empty-month');
+                        if (emptyMonth) {
+                            emptyMonth.textContent = monthNames[parseInt(month) - 1].toLowerCase();
+                        }
+                        emptyState.style.display = 'block';
+                    } else {
+                        emptyState.style.display = 'none';
+                    }
+                }
+
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('Erro ao carregar contatos:', error);
                 showNotification('❌ Erro ao carregar contatos', true);
             }
         }
@@ -882,19 +925,40 @@
             const contactElement = document.createElement('div');
             contactElement.className = 'contact-card';
             
-            // Format birthday date
-            const birthday = contact.birthday ? new Date(contact.birthday) : null;
-            const formattedBirthday = birthday ? 
+            // Handle MongoDB date format
+            const createdAt = new Date(contact.createdAt.$date ? contact.createdAt.$date.$numberLong : contact.createdAt);
+            const formattedCreatedAt = createdAt.toLocaleDateString('pt-BR') + ' às ' + 
+                createdAt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            
+            // Handle birthday (if exists)
+            const birthdayDisplay = contact.birthday ? 
                 `<p class="birthday-info">
                     <i class="fas fa-birthday-cake"></i> 
-                    ${birthday.getDate().toString().padStart(2, '0')}/${(birthday.getMonth() + 1).toString().padStart(2, '0')}
+                    ${new Date(contact.birthday).toLocaleDateString('pt-BR')}
                 </p>` : '';
+
+            // Handle owner/username display
+            const ownerDisplay = contact.owner || contact.username || 'Usuário';
+            
+            // Handle message status
+            const messageStatus = contact.receivedMessage ? 'resent' : '';
+            const messageButtonDisabled = contact.receivedMessage ? 'disabled' : '';
 
             contactElement.innerHTML = `
                 <div class="contact-info">
                     <h3>${contact.name}</h3>
                     <p><i class="fas fa-phone"></i> ${contact.phone}</p>
-                    ${formattedBirthday}
+                    ${birthdayDisplay}
+                    <div class="contact-metadata">
+                        <span>
+                            <i class="fas fa-user-plus"></i>
+                            Adicionado por: ${ownerDisplay}
+                        </span>
+                        <span>
+                            <i class="far fa-clock"></i>
+                            ${formattedCreatedAt}
+                        </span>
+                    </div>
                 </div>
                 <div class="button-container">
                     <div class="main-button">
@@ -903,18 +967,18 @@
                         </button>
                     </div>
                     <div class="action-menu">
-                        <button onclick="makeMember('${contact._id}')" class="action-button make-member-btn">
+                        <button onclick="makeMember('${contact._id.$oid || contact._id}')" class="action-button make-member-btn">
                             <i class="fas fa-user-plus"></i> Tornar Membro
                         </button>
-                        <button onclick="sendFollowUpMessage('${contact.phone}', '${contact.name}', '${contact._id}')" 
-                                class="action-button send-button ${contact.messageResent ? 'resent' : ''}"
-                                ${contact.messageResent ? 'disabled' : ''}>
+                        <button onclick="sendFollowUpMessage('${contact.phone}', '${contact.name}', '${contact._id.$oid || contact._id}')" 
+                                class="action-button send-button ${messageStatus}"
+                                ${messageButtonDisabled}>
                             <i class="fab fa-whatsapp"></i> Enviar Mensagem
                         </button>
-                        <button onclick="editContact('${contact._id}')" class="action-button edit-button">
+                        <button onclick="editContact('${contact._id.$oid || contact._id}')" class="action-button edit-button">
                             <i class="fas fa-edit"></i> Editar
                         </button>
-                        <button onclick="deleteContact('${contact._id}')" class="action-button delete-button">
+                        <button onclick="deleteContact('${contact._id.$oid || contact._id}')" class="action-button delete-button">
                             <i class="fas fa-trash"></i> Excluir
                         </button>
                     </div>
@@ -1017,17 +1081,13 @@
             }
         }
 
-        // Add new function for follow-up message
+        // Update the sendFollowUpMessage function in dashboard.html
         async function sendFollowUpMessage(phone, name, contactId) {
             try {
                 const cleanPhone = phone.replace(/\D/g, '');
                 
-                const followUpMessage = `Olá ${name}! Espero que esteja bem! 😊\n\n` +
-                    `Como você está? Gostaria de saber como tem sido sua experiência em nossa igreja.\n\n` +
-                    `Lembre-se que estamos aqui para apoiá-lo(a) em sua caminhada com Cristo! 🙏\n\n` +
-                    `Se precisar de alguma coisa, pode contar conosco!\n\n` +
-                    `Que Deus continue te abençoando! ✨\n\n` +
-                    `Com carinho,\nJuventude da Igreja Batista Solidária (JIBS)`;
+                // Usa a mensagem aleatória do arquivo messages.js
+                const followUpMessage = getRandomFollowUpMessage(name);
 
                 const response = await fetch('/api/send-whatsapp', {
                     method: 'POST',
@@ -1047,7 +1107,7 @@
                 
                 if (data.success) {
                     showNotification('✅ Mensagem de acompanhamento enviada com sucesso!');
-                    await loadContacts(); // Reload to update status
+                    await loadContacts();
                 } else {
                     showNotification('❌ ' + (data.message || 'Erro ao enviar mensagem'), true);
                 }
@@ -1104,10 +1164,12 @@
             }
         }
 
-        // Função para filtrar contatos
+        // Update the filterContacts function
         function filterContacts() {
             const monthFilter = document.getElementById('month-filter').value;
+
             if (monthFilter === 'all') {
+                document.getElementById('selected-month').textContent = 'Todos';
                 loadContacts();
             } else {
                 loadMonthContacts(monthFilter);
@@ -1148,7 +1210,7 @@
         }
 
         // Inicializa a página
-        // Update the window load event listener to properly display the username and role
+        // Update the window load event listener in dashboard.html
         window.addEventListener('load', async () => {
             const token = localStorage.getItem('token');
             const username = localStorage.getItem('username');
@@ -1160,22 +1222,27 @@
             }
 
             try {
-                // Update only the username display in header
+                // Update username display first
                 const usernameDisplay = document.getElementById('username-display');
                 if (usernameDisplay) {
-                    const displayName = username || 'Usuário';
                     usernameDisplay.innerHTML = `
                         <i class="fas fa-user"></i> 
-                        Olá, ${displayName}!
+                        Olá, ${username || 'Usuário'}!
                         ${role === 'admin' ? ' (Administrador)' : ''}
                     `;
                 }
 
+                // Load contacts with error handling
+                console.log('Iniciando carregamento de contatos...');
                 await loadContacts();
+                console.log('Contatos carregados com sucesso');
+
+                // Check admin access last
                 await checkAdminAccess();
+
             } catch (error) {
-                console.error('Erro ao carregar informações:', error);
-                showNotification('Erro ao carregar informações do usuário', true);
+                console.error('Erro ao inicializar dashboard:', error);
+                showNotification('❌ Erro ao carregar informações', true);
             }
         });
       

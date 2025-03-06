@@ -199,75 +199,94 @@ async function validateToken() {
 // Carregar contatos
 async function loadContacts() {
     try {
-        const monthFilter = document.getElementById('month-filter');
-        const selectedMonth = monthFilter.value;
-        const params = selectedMonth !== '' ? `?month=${selectedMonth}` : '';
-
-        const response = await fetch(`/contacts${params}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Erro ao carregar contatos');
-        }
-
-        const container = document.getElementById('contacts-list');
-        const emptyState = document.getElementById('empty-state');
-        const emptyMonth = document.getElementById('empty-month');
-        
-        if (!data.contacts || data.contacts.length === 0) {
-            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                              'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-            emptyMonth.textContent = selectedMonth !== '' ? monthNames[selectedMonth - 1].toLowerCase() : 'este período';
-            emptyState.style.display = 'block';
-            container.innerHTML = '';
-            container.appendChild(emptyState);
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = 'login.html';
             return;
         }
 
-        emptyState.style.display = 'none';
-        container.innerHTML = data.contacts.map(contact => {
-            const date = new Date(contact.createdAt);
-            const formattedDate = date.toLocaleDateString('pt-BR');
-            return `
-                <div class="contact-card">
-                    <div class="contact-info">
-                        <div class="contact-avatar">
-                            ${contact.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div class="contact-details">
-                            <h4>${contact.name}</h4>
-                            <p>${contact.phone}</p>
-                            <small>Adicionado em: ${formattedDate}</small>
-                        </div>
-                    </div>
-                    ${contact.isOwner ? `
-                        <div class="contact-actions">
-                            <button onclick="editContact('${contact._id}')" class="edit-btn">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="deleteContact('${contact._id}')" class="delete-btn">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }).join('');
+        const response = await fetch('/api/contacts/all', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
 
-        // Atualiza o título com o mês selecionado
-        const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                           'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        const monthDisplay = selectedMonth !== '' ? monthNames[selectedMonth - 1] : 'Todos';
-        document.getElementById('selected-month').textContent = monthDisplay;
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+                return;
+            }
+            throw new Error('Erro ao carregar contatos');
+        }
+
+        const data = await response.json();
+        
+        // Se não houver contatos, mostrar estado vazio
+        if (!data.contacts || data.contacts.length === 0) {
+            const contactsList = document.getElementById('contacts-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (emptyState) {
+                emptyState.style.display = 'block';
+            }
+            
+            if (contactsList) {
+                contactsList.innerHTML = '';
+                if (emptyState) {
+                    contactsList.appendChild(emptyState);
+                }
+            }
+            return;
+        }
+
+        // Mostrar os contatos
+        displayContacts(data);
 
     } catch (error) {
-        showNotification(error.message, 'error');
+        console.error('Erro ao carregar contatos:', error);
+        showNotification('❌ Erro ao carregar contatos: ' + error.message, true);
     }
+}
+
+// Atualizar a função displayContacts para ser mais robusta
+function displayContacts(data) {
+    const contactsList = document.getElementById('contacts-list');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (!contactsList) {
+        console.error('Elemento contacts-list não encontrado');
+        return;
+    }
+
+    // Limpar lista atual
+    contactsList.innerHTML = '';
+
+    if (!data.contacts || data.contacts.length === 0) {
+        if (emptyState) {
+            emptyState.style.display = 'block';
+            contactsList.appendChild(emptyState);
+        }
+        return;
+    }
+
+    if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+
+    // Ordenar contatos por data de criação (mais recentes primeiro)
+    const sortedContacts = data.contacts.sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+    );
+
+    sortedContacts.forEach(contact => {
+        try {
+            const contactElement = createContactElement(contact);
+            contactsList.appendChild(contactElement);
+        } catch (error) {
+            console.error('Erro ao criar elemento de contato:', error);
+        }
+    });
 }
 
 // Editar contato
@@ -347,6 +366,60 @@ async function deleteContact(contactId) {
         
     } catch (error) {
         showMessage(error.message, true);
+    }
+}
+
+// Função para enviar mensagem WhatsApp
+async function sendWhatsAppMessage(phone, name, contactId) {
+    try {
+        const cleanPhone = phone.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+        
+        // Determina a saudação com base na hora
+        const hora = new Date().getHours();
+        let saudacao;
+        if (hora >= 5 && hora < 12) {
+            saudacao = "Bom dia";
+        } else if (hora >= 12 && hora < 18) {
+            saudacao = "Boa tarde";
+        } else {
+            saudacao = "Boa noite";
+        }
+
+        const message = `${saudacao}, ${name}! Graça e Paz do Senhor Jesus!\n\n` +
+            "Seja muito bem-vindo(a) à Igreja Batista Solidária! A Juventude da Igreja Batista Solidária (JIBS) também celebra a sua chegada e se alegra em recebê-lo(a). " +
+            "É uma honra tê-lo(a) conosco e agradecemos por compartilhar seu contato.\n\n" +
+            "Que este momento seja especial em sua vida e que você se sinta acolhido(a) e abençoado(a) por Deus. " +
+            "Estamos aqui para caminhar ao seu lado e auxiliar no que for preciso.\n\n" +
+            "Que o Senhor renove sua paz, sua alegria e sua esperança hoje e sempre!\n\n" +
+            "Com carinho,\nJuventude da Igreja Batista Solidária (JIBS) e Igreja Batista Solidária";
+        
+        const response = await fetch('/api/send-whatsapp', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({
+                phone: cleanPhone,
+                message: message,
+                contactId: contactId
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('✅ Mensagem enviada com sucesso!');
+            // Recarrega a lista de contatos para atualizar o status
+            await loadContacts();
+        } else if (data.message === 'Mensagem já enviada') {
+            showNotification('⚠️ Mensagem já foi enviada anteriormente. Não é recomendado reenviar.', true);
+        } else {
+            showNotification('❌ ' + (data.message || 'Erro ao enviar mensagem'), true);
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        showNotification('❌ Erro ao enviar mensagem', true);
     }
 }
 
