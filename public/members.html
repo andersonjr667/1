@@ -881,25 +881,6 @@
         function closeModal(modalId) {
             document.getElementById(modalId).style.display = 'none';
         }
-
-        // Add this right after your other script content
-        window.addEventListener('beforeunload', async () => {
-            try {
-                const token = localStorage.getItem('token');
-                if (token) {
-                    await fetch('/api/auth/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    localStorage.removeItem('token');
-                }
-            } catch (error) {
-                console.error('Erro ao fazer logout:', error);
-            }
-        });
     </script>
 </body>
 </html>
