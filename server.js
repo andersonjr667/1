@@ -38,6 +38,10 @@ let whatsappClient = null;
 let isInitializing = false;
 let state = null;
 
+// Add this at the top of your script
+const API_BASE_URL = '/api'; // Change this to match your API URL
+console.log('API Base URL:', API_BASE_URL);
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
@@ -146,7 +150,7 @@ const memberSchema = new mongoose.Schema({
     },
     birthday: {
         type: Date,
-        required: true
+        required: false // Make birthday optional
     },
     isDisciple: {
         type: Boolean,
@@ -154,13 +158,9 @@ const memberSchema = new mongoose.Schema({
     },
     discipleBy: {
         type: String,
-        default: null
-    },
-    createdAt: {
-        type: Date,
-        default: Date.now
+        required: false
     }
-});
+}, { timestamps: true });
 
 const Member = mongoose.model('Member', memberSchema, 'members');
 
@@ -683,6 +683,20 @@ app.post('/logout', authenticateToken, (req, res) => {
     }
 });
 
+// Add this with your other API routes
+app.post('/api/auth/logout', authenticateToken, async (req, res) => {
+    try {
+        const token = req.headers.authorization.split(' ')[1];
+        if (token) {
+            invalidTokens.add(token);
+        }
+        res.status(200).json({ message: 'Logout successful' });
+    } catch (error) {
+        console.error('Logout error:', error);
+        res.status(500).json({ message: 'Error during logout' });
+    }
+});
+
 // Rota temporária para atualizar roles dos usuários
 app.get('/update-user-roles', async (req, res) => {
     try {
@@ -1052,12 +1066,27 @@ app.get('/api/members', authenticateToken, async (req, res) => {
 // Add new member
 app.post('/api/members', authenticateToken, async (req, res) => {
     try {
-        const member = new Member(req.body);
+        const memberData = {
+            name: req.body.name,
+            phone: req.body.phone,
+            isDisciple: false
+        };
+
+        // Only add birthday if it's provided
+        if (req.body.birthday) {
+            memberData.birthday = new Date(req.body.birthday);
+        }
+
+        const member = new Member(memberData);
         await member.save();
+        
         res.status(201).json(member);
     } catch (error) {
         console.error('Erro ao criar membro:', error);
-        res.status(500).json({ message: 'Erro ao criar membro' });
+        res.status(500).json({ 
+            message: 'Erro ao criar membro',
+            error: error.message 
+        });
     }
 });
 
@@ -1074,6 +1103,26 @@ app.put('/api/members/:id/toggle-disciple', authenticateToken, async (req, res) 
     } catch (error) {
         console.error('Erro ao atualizar status:', error);
         res.status(500).json({ message: 'Erro ao atualizar status' });
+    }
+});
+
+// This should be in your backend server file
+app.delete('/api/members/:id', authenticateToken, async (req, res) => {
+    try {
+        const memberId = req.params.id;
+        // Add console.log for debugging
+        console.log('Received delete request for member:', memberId);
+        
+        const result = await Member.findByIdAndDelete(memberId);
+        
+        if (!result) {
+            return res.status(404).json({ message: 'Membro não encontrado' });
+        }
+        
+        res.status(200).json({ message: 'Membro excluído com sucesso' });
+    } catch (error) {
+        console.error('Error deleting member:', error);
+        res.status(500).json({ message: 'Erro ao excluir membro', error: error.message });
     }
 });
 

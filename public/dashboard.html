@@ -370,6 +370,32 @@
         .contact-metadata i {
             color: #888;
         }
+
+        /* Add these styles to your existing CSS */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background: #4CAF50;
+            color: white;
+            font-size: 14px;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .notification.error {
+            background: #f44336;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body class="dashboard">
@@ -441,6 +467,45 @@
                                 <i class="fas fa-plus"></i> Adicionar Contato
                             </button>
                             <button type="button" class="cancel-btn" onclick="closeModal('add-contact-modal')">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal Editar Membro -->
+            <div id="edit-member-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Editar Membro</h2>
+                        <span class="close" onclick="closeModal('edit-member-modal')">&times;</span>
+                    </div>
+                    <form id="edit-member-form" onsubmit="updateMember(event)">
+                        <input type="hidden" id="edit-member-id">
+                        <div class="form-group">
+                            <label for="edit-name">
+                                <i class="fas fa-user"></i> Nome
+                            </label>
+                            <input type="text" id="edit-name" name="edit-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-phone">
+                                <i class="fas fa-phone"></i> Telefone
+                            </label>
+                            <input type="tel" id="edit-phone" name="edit-phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-birthday">
+                                <i class="fas fa-birthday-cake"></i> Data de Nascimento
+                            </label>
+                            <input type="date" id="edit-birthday" name="edit-birthday">
+                        </div>
+                        <div class="modal-actions">
+                            <button type="submit" class="submit-btn">
+                                <i class="fas fa-save"></i> Salvar Alterações
+                            </button>
+                            <button type="button" class="cancel-btn" onclick="closeModal('edit-member-modal')">
                                 <i class="fas fa-times"></i> Cancelar
                             </button>
                         </div>
@@ -1409,6 +1474,155 @@
             });
         }
     });
+
+    // Add this right after your existing window.addEventListener('load', ...) code
+
+    // Automatic logout on tab close
+    window.addEventListener('beforeunload', async (event) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (token) {
+                // Send logout request to server
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    // Use keepalive to ensure the request completes even if the page is closing
+                    keepalive: true
+                });
+                
+                // Clear local storage
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('role');
+            }
+        } catch (error) {
+            console.error('Erro ao fazer logout:', error);
+        }
+    });
+
+    // Add visibility change handler for additional security
+    document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'hidden') {
+            try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    localStorage.clear();
+                }
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+            }
+        }
+    });
+
+    // Add this function to initialize editing a member
+    async function editMember(memberId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+
+            const response = await fetch(`/api/members/${memberId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erro ao carregar dados do membro');
+            }
+
+            const member = await response.json();
+            
+            // Fill the edit form with member data
+            document.getElementById('edit-member-id').value = memberId;
+            document.getElementById('edit-name').value = member.name;
+            document.getElementById('edit-phone').value = member.phone;
+            document.getElementById('edit-birthday').value = member.birthday ? 
+                new Date(member.birthday).toISOString().split('T')[0] : '';
+
+            // Show the edit modal
+            document.getElementById('edit-member-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao carregar dados do membro: ' + error.message);
+        }
+    }
+
+    // Add this function to handle member updates
+    async function updateMember(event) {
+        event.preventDefault();
+        
+        try {
+            const memberId = document.getElementById('edit-member-id').value;
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+
+            const memberData = {
+                name: document.getElementById('edit-name').value.trim(),
+                phone: document.getElementById('edit-phone').value.trim(),
+                birthday: document.getElementById('edit-birthday').value || null
+            };
+
+            const response = await fetch(`/api/members/${memberId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(memberData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Erro ao atualizar membro');
+            }
+
+            // Close modal and refresh members list
+            document.getElementById('edit-member-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            await loadMembers();
+            showNotification('✅ Membro atualizado com sucesso!');
+
+        } catch (error) {
+            console.error('Erro:', error);
+            showNotification('❌ Erro ao atualizar membro: ' + error.message, true);
+        }
+    }
+
+    // Add this function to show notifications
+    function showNotification(message, isError = false) {
+        const notification = document.createElement('div');
+        notification.className = `notification ${isError ? 'error' : 'success'}`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.classList.add('show');
+        }, 100);
+
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        }, 3000);
+    }
     </script>
 </body>
 </html>

@@ -30,7 +30,7 @@
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.95); /* Changed from 0.1 to 0.95 */
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 2rem;
@@ -99,9 +99,10 @@
             background: white;
             padding: 1.5rem;
             border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); /* Increased shadow */
             transition: all 0.3s ease;
             border-left: 4px solid #4CAF50;
+            margin-bottom: 1rem; /* Added margin */
         }
 
         .member-card:hover {
@@ -135,13 +136,15 @@
         .member-name {
             margin: 0 0 0.5rem 0;
             font-size: 1.2rem;
-            color: #333;
+            color: #000; /* Changed from #333 to #000 */
+            font-weight: 600; /* Made text bolder */
         }
 
         .member-phone, .member-birthday {
             margin: 0.25rem 0;
-            color: #666;
-            font-size: 0.9rem;
+            color: #333; /* Changed from #666 to #333 */
+            font-size: 0.95rem; /* Slightly larger */
+            font-weight: 500; /* Made text more visible */
             display: flex;
             align-items: center;
             gap: 0.5rem;
@@ -394,7 +397,7 @@
             </div>
             <form id="member-form" onsubmit="addMember(event)">
                 <div class="form-group">
-                    <label for="name">Nome Completo</label>
+                    <label for="name">Nome</label>
                     <input type="text" id="name" name="name" required>
                 </div>
                 <div class="form-group">
@@ -402,8 +405,8 @@
                     <input type="tel" id="phone" name="phone" required>
                 </div>
                 <div class="form-group">
-                    <label for="birthday">Data de Nascimento</label>
-                    <input type="date" id="birthday" name="birthday" required>
+                    <label for="birthday">Data de Nascimento (opcional)</label>
+                    <input type="date" id="birthday" name="birthday">
                 </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn-action btn-primary">Adicionar</button>
@@ -413,33 +416,108 @@
         </div>
     </div>
 
+    <div id="edit-member-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Membro</h3>
+                <button class="close" onclick="closeModal('edit-member-modal')">&times;</button>
+            </div>
+            <form id="edit-member-form" onsubmit="updateMember(event)">
+                <input type="hidden" id="edit-member-id">
+                <div class="form-group">
+                    <label for="edit-name">Nome</label>
+                    <input type="text" id="edit-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-phone">Telefone</label>
+                    <input type="tel" id="edit-phone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-birthday">Data de Nascimento (opcional)</label>
+                    <input type="date" id="edit-birthday" name="birthday">
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-action btn-primary">Salvar</button>
+                    <button type="button" class="btn-action btn-secondary" onclick="closeModal('edit-member-modal')">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
+        // Add this at the beginning of your script
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Sessão expirada. Por favor, faça login novamente.');
+                window.location.href = 'login.html';
+                return;
+            }
+            loadMembers();
+        });
+
         let members = [];
 
         // Carregar membros
         async function loadMembers() {
+            showLoadingState();
             try {
-                const membersList = document.getElementById('members-list');
-                membersList.classList.add('loading');
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Token não encontrado. Por favor, faça login novamente.');
+                }
 
                 const response = await fetch('/api/members', {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
                 
-                if (!response.ok) throw new Error('Erro ao carregar membros');
+                if (!response.ok) {
+                    throw new Error('Erro ao carregar membros. Por favor, tente novamente.');
+                }
                 
                 members = await response.json();
+                if (members.length === 0) {
+                    document.getElementById('members-list').innerHTML = `
+                        <div style="text-align: center; width: 100%; padding: 2rem;">
+                            <i class="fas fa-users" style="font-size: 2rem; color: #2E7D32;"></i>
+                            <p style="color: #2E7D32; margin-top: 1rem;">Nenhum membro cadastrado</p>
+                        </div>
+                    `;
+                    return;
+                }
                 displayMembers();
-                addTouchFeedback(); // Re-add touch feedback for new elements
+                addTouchFeedback();
 
             } catch (error) {
                 console.error('Erro:', error);
-                alert('Erro ao carregar membros');
-            } finally {
-                membersList.classList.remove('loading');
+                showErrorState(error.message);
             }
+        }
+
+        // Add this after your loadMembers() function
+        function showLoadingState() {
+            const membersList = document.getElementById('members-list');
+            membersList.innerHTML = `
+                <div style="text-align: center; width: 100%; padding: 2rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: #2E7D32;"></i>
+                    <p style="color: #2E7D32; margin-top: 1rem;">Carregando membros...</p>
+                </div>
+            `;
+        }
+
+        function showErrorState(message) {
+            const membersList = document.getElementById('members-list');
+            membersList.innerHTML = `
+                <div style="text-align: center; width: 100%; padding: 2rem;">
+                    <i class="fas fa-exclamation-circle" style="font-size: 2rem; color: #d32f2f;"></i>
+                    <p style="color: #d32f2f; margin-top: 1rem;">${message}</p>
+                    <button onclick="loadMembers()" class="btn-action" style="margin-top: 1rem;">
+                        <i class="fas fa-redo"></i> Tentar novamente
+                    </button>
+                </div>
+            `;
         }
 
         // Update the displayMembers function
@@ -451,7 +529,7 @@
                 const memberCard = document.createElement('div');
                 memberCard.className = 'member-card';
                 
-                const birthday = new Date(member.birthday).toLocaleDateString('pt-BR');
+                const birthday = member.birthday ? new Date(member.birthday).toLocaleDateString('pt-BR') : 'Não informado';
                 
                 memberCard.innerHTML = `
                     <div class="member-info">
@@ -495,31 +573,44 @@
         async function addMember(event) {
             event.preventDefault();
             
+            const birthdayValue = document.getElementById('birthday').value;
+            
             const memberData = {
                 name: document.getElementById('name').value,
                 phone: document.getElementById('phone').value,
-                birthday: document.getElementById('birthday').value,
+                birthday: birthdayValue || undefined, // Send undefined if empty
                 isDisciple: false
             };
 
             try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Token não encontrado. Por favor, faça login novamente.');
+                }
+
                 const response = await fetch('/api/members', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify(memberData)
                 });
 
-                if (!response.ok) throw new Error('Erro ao adicionar membro');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Erro ao adicionar membro');
+                }
 
+                const result = await response.json();
                 document.getElementById('add-member-modal').style.display = 'none';
                 document.getElementById('member-form').reset();
                 await loadMembers();
+                alert('Membro adicionado com sucesso!');
+                
             } catch (error) {
-                console.error('Erro:', error);
-                alert('Erro ao adicionar membro');
+                console.error('Erro detalhado:', error);
+                alert(`Erro ao adicionar membro: ${error.message}`);
             }
         }
 
@@ -567,25 +658,25 @@
                     throw new Error('Token não encontrado. Por favor, faça login novamente.');
                 }
 
+                // Log the request URL for debugging
+                console.log(`Attempting to delete member with ID: ${memberId}`);
+                
                 const response = await fetch(`/api/members/${memberId}`, {
                     method: 'DELETE',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
                     }
                 });
 
+                // Log the response status for debugging
+                console.log('Delete response status:', response.status);
+
                 if (!response.ok) {
-                    // Try to parse error response as JSON
-                    let errorMessage = 'Erro ao excluir membro';
-                    try {
-                        const errorData = await response.json();
-                        errorMessage = errorData.message || errorMessage;
-                    } catch (e) {
-                        // If response is not JSON, use status text
-                        errorMessage = `Erro: ${response.status} - ${response.statusText}`;
-                    }
-                    throw new Error(errorMessage);
+                    const errorText = await response.text();
+                    console.error('Error response:', errorText);
+                    
+                    throw new Error(`Erro ao excluir membro (${response.status}): ${errorText}`);
                 }
 
                 // Remove member from local array and update display
@@ -597,7 +688,7 @@
 
             } catch (error) {
                 console.error('Erro ao excluir membro:', error);
-                alert(error.message || 'Erro ao excluir membro');
+                showErrorState(`Erro ao excluir membro: ${error.message}`);
             }
         }
 
@@ -606,8 +697,22 @@
             document.getElementById('add-member-modal').style.display = 'block';
         }
 
-        // Inicialização
-        document.addEventListener('DOMContentLoaded', () => {
+        // Update the initialization code
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('Sessão expirada. Por favor, faça login novamente.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Check API availability
+            const isApiAvailable = await checkApiAvailability();
+            if (!isApiAvailable) {
+                showErrorState('Não foi possível conectar ao servidor. Verifique se o servidor está rodando e tente novamente.');
+                return;
+            }
+
             loadMembers();
             
             // Modal close events
@@ -659,6 +764,142 @@
 
         // Call touch feedback on page load
         document.addEventListener('DOMContentLoaded', addTouchFeedback);
+
+        // Add these utility functions
+        function isNetworkError(error) {
+            return (
+                error.name === 'TypeError' && 
+                (error.message.includes('Failed to fetch') || 
+                 error.message.includes('NetworkError') ||
+                 error.message.includes('Network request failed'))
+            );
+        }
+
+        function handleApiError(error) {
+            if (isNetworkError(error)) {
+                return 'Erro de conexão: Verifique sua conexão com a internet e se o servidor está rodando.';
+            }
+            if (error.status === 404) {
+                return 'API não encontrada: Verifique se o servidor está rodando na URL correta.';
+            }
+            if (error.status === 401) {
+                localStorage.removeItem('token');
+                window.location.href = 'login.html';
+                return 'Sessão expirada. Por favor, faça login novamente.';
+            }
+            return error.message || 'Ocorreu um erro desconhecido.';
+        }
+
+        // Add this before your other functions
+        async function checkApiAvailability() {
+            try {
+                const response = await fetch('/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`API não está respondendo (${response.status})`);
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('API Check Error:', error);
+                return false;
+            }
+        }
+
+        async function editMember(memberId) {
+            try {
+                const member = members.find(m => m._id === memberId);
+                if (!member) {
+                    throw new Error('Membro não encontrado');
+                }
+
+                // Fill the edit form with member data
+                document.getElementById('edit-member-id').value = memberId;
+                document.getElementById('edit-name').value = member.name;
+                document.getElementById('edit-phone').value = member.phone;
+                document.getElementById('edit-birthday').value = member.birthday ? new Date(member.birthday).toISOString().split('T')[0] : '';
+
+                // Show the edit modal
+                document.getElementById('edit-member-modal').style.display = 'block';
+
+            } catch (error) {
+                console.error('Erro ao carregar dados do membro:', error);
+                alert('Erro ao carregar dados do membro');
+            }
+        }
+
+        async function updateMember(event) {
+            event.preventDefault();
+            
+            const memberId = document.getElementById('edit-member-id').value;
+            const memberData = {
+                name: document.getElementById('edit-name').value,
+                phone: document.getElementById('edit-phone').value,
+                birthday: document.getElementById('edit-birthday').value || null
+            };
+
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Token não encontrado. Por favor, faça login novamente.');
+                }
+
+                console.log('Updating member:', memberId);
+                console.log('Update data:', memberData);
+
+                const response = await fetch(`/api/members/${memberId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(memberData)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Erro ao atualizar membro (${response.status}): ${errorText}`);
+                }
+
+                // Close modal and refresh members list
+                document.getElementById('edit-member-modal').style.display = 'none';
+                await loadMembers();
+                alert('Membro atualizado com sucesso!');
+                
+            } catch (error) {
+                console.error('Erro ao atualizar membro:', error);
+                alert(`Erro ao atualizar membro: ${error.message}`);
+            }
+        }
+
+        // Add this to your existing modal functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Add this right after your other script content
+        window.addEventListener('beforeunload', async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    await fetch('/api/auth/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    localStorage.removeItem('token');
+                }
+            } catch (error) {
+                console.error('Erro ao fazer logout:', error);
+            }
+        });
     </script>
 </body>
 </html>
